@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/text3cn/t3web/providers/httpserver"
+	"github.com/text3cn/goodle/providers/httpserver"
 )
 
 func Logger() httpserver.RequestHandler {

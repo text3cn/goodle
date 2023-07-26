@@ -2,7 +2,7 @@
 package logger
 
 import (
-	"github.com/text3cn/t3web/container"
+	"github.com/text3cn/goodle/container"
 )
 
 // 声明对外服务的接口

@@ -2,8 +2,8 @@ package httpserver
 
 import (
 	"context"
-	"github.com/text3cn/t3web/container"
-	"github.com/text3cn/t3web/providers/logger"
+	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/providers/logger"
 	"net/http"
 	"sync"
 	"time"

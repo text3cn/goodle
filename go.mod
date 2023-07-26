@@ -1,4 +1,4 @@
-module github.com/text3cn/t3web
+module github.com/text3cn/goodle
 
 go 1.18
 

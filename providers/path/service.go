@@ -1,7 +1,7 @@
 package path
 
 import (
-	"github.com/text3cn/t3web/container"
+	"github.com/text3cn/goodle/container"
 )
 
 type Service interface {

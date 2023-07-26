@@ -2,8 +2,8 @@
 package cache
 
 import (
-	servicescenter2 "github.com/text3cn/t3web/container"
-	"github.com/text3cn/t3web/providers/logger"
+	servicescenter2 "github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/providers/logger"
 )
 
 const Name = "cache"

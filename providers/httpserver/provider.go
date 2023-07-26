@@ -2,15 +2,15 @@
 package httpserver
 
 import (
-	servicescenter2 "github.com/text3cn/t3web/container"
-	"github.com/text3cn/t3web/providers/logger"
+	servicescenter2 "github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/providers/logger"
 )
 
 const Name = "httpserver"
 
 type HttpServerProvider struct {
 	servicescenter2.ServiceProvider
-	HttpServer *T3WebEngine
+	HttpServer *GoodleEngine
 }
 
 func (self *HttpServerProvider) Name() string {

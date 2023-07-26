@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/text3cn/t3web/container"
-	"github.com/text3cn/t3web/engine"
-	"github.com/text3cn/t3web/providers/cache"
-	"github.com/text3cn/t3web/providers/httpserver"
-	"github.com/text3cn/t3web/providers/httpserver/middleware"
+	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/engine"
+	"github.com/text3cn/goodle/providers/cache"
+	"github.com/text3cn/goodle/providers/httpserver"
+	"github.com/text3cn/goodle/providers/httpserver/middleware"
 	"os"
 	"os/signal"
 	"syscall"
@@ -42,7 +42,7 @@ func main() {
 	//log.Println("server exiting")
 }
 
-func registerRouter(core *httpserver.T3WebEngine) {
+func registerRouter(core *httpserver.GoodleEngine) {
 	// 设置控制器
 	// core.Get("foo", framework.TimeoutHandler(FooControllerHandler, time.Second*1))
 

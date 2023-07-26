@@ -1,9 +1,9 @@
 package engine
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/text3cn/t3web/container"
-	"github.com/text3cn/t3web/providers/httpserver"
+	"github.com/spf13/cobra" // https://github.com/spf13/cobra
+	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/providers/httpserver"
 )
 
 type Command struct {
@@ -12,14 +12,14 @@ type Command struct {
 }
 
 // 初始化根 Command 并运行
-func Run(container container.Container, router func(engine *httpserver.T3WebEngine)) {
+func Run(container container.Container, router func(engine *httpserver.GoodleEngine)) {
 	var cobraRoot = &cobra.Command{
 		// 定义根命令的关键字
 		Use: "./main",
 		// 简短介绍
-		Short: "T3web Command",
+		Short: "Goodle Command",
 		// 根命令的详细介绍
-		Long: "T3web v0.0.1",
+		Long: "Goodle Framework For Command",
 		// 根命令的执行函数
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.InitDefaultHelpFlag()

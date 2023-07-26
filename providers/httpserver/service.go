@@ -1,10 +1,10 @@
 package httpserver
 
 import (
-	"github.com/text3cn/t3web/container"
+	"github.com/text3cn/goodle/container"
 )
 
 type HttpServerService struct {
 	container container.Container
-	*T3WebEngine
+	*GoodleEngine
 }

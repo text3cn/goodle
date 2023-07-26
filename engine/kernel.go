@@ -2,15 +2,15 @@ package engine
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/text3cn/t3web/providers/cache"
-	"github.com/text3cn/t3web/providers/httpserver"
-	"github.com/text3cn/t3web/providers/logger"
+	"github.com/text3cn/goodle/providers/cache"
+	"github.com/text3cn/goodle/providers/httpserver"
+	"github.com/text3cn/goodle/providers/logger"
 	"log"
 	"net/http"
 )
 
 // 挂载框架内置命令
-func AddKernelCommands(command *Command, router func(engine *httpserver.T3WebEngine)) {
+func AddKernelCommands(command *Command, router func(engine *httpserver.GoodleEngine)) {
 	httpServer := &cobra.Command{
 		Use:   "start",
 		Short: "Start as a daemon",
@@ -21,7 +21,7 @@ func AddKernelCommands(command *Command, router func(engine *httpserver.T3WebEng
 	command.cobra.AddCommand(httpServer)
 }
 
-func httpServerDeamon(command *Command, router func(engine *httpserver.T3WebEngine)) {
+func httpServerDeamon(command *Command, router func(engine *httpserver.GoodleEngine)) {
 	//cntxt := &daemon.Context{
 	//	// 设置pid文件
 	//	PidFileName: serverPidFile,
@@ -39,10 +39,10 @@ func httpServerDeamon(command *Command, router func(engine *httpserver.T3WebEngi
 	startHttpServer(command, router)
 }
 
-func startHttpServer(command *Command, router func(engine *httpserver.T3WebEngine)) {
+func startHttpServer(command *Command, router func(engine *httpserver.GoodleEngine)) {
 	container := command.GetContainer()
 	container.Bind(&httpserver.HttpServerProvider{})
-	engine := container.NewSingle(httpserver.Name).(*httpserver.HttpServerService).T3WebEngine.T3Web()
+	engine := container.NewSingle(httpserver.Name).(*httpserver.HttpServerService).GoodleEngine.WebServer()
 	engine.ServiceProvider(logger.Name, &logger.LoggerServiceProvider{})
 	engine.ServiceProvider(cache.Name, &cache.CacheServiceProvider{})
 	router(engine) // 把路由保存到 map

@@ -2,7 +2,7 @@
 package logger
 
 import (
-	servicescenter2 "github.com/text3cn/t3web/container"
+	servicescenter2 "github.com/text3cn/goodle/container"
 )
 
 const Name = "logger"

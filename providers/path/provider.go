@@ -2,15 +2,15 @@
 package path
 
 import (
-	servicescenter2 "github.com/text3cn/t3web/container"
-	"github.com/text3cn/t3web/providers/logger"
+	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/providers/logger"
 	"os"
 )
 
 const Name = "path"
 
 type PathProvider struct {
-	servicescenter2.ServiceProvider
+	container.ServiceProvider
 	RootPath string
 }
 
@@ -18,7 +18,7 @@ func (self *PathProvider) Name() string {
 	return Name
 }
 
-func (self *PathProvider) Boot(c servicescenter2.Container) error {
+func (self *PathProvider) Boot(c container.Container) error {
 	logger.Instance().Trace("Boot Path Provider")
 	file, err := os.Getwd()
 	if err == nil {
@@ -27,9 +27,9 @@ func (self *PathProvider) Boot(c servicescenter2.Container) error {
 	return nil
 }
 
-func (sp *PathProvider) RegisterProviderInstance(c servicescenter2.Container) servicescenter2.NewInstance {
+func (sp *PathProvider) RegisterProviderInstance(c container.Container) container.NewInstance {
 	return func(params ...interface{}) (interface{}, error) {
-		c := params[0].(servicescenter2.Container)
+		c := params[0].(container.Container)
 		return &PathService{container: c}, nil
 	}
 }
@@ -38,6 +38,6 @@ func (*PathProvider) IsDefer() bool {
 	return false
 }
 
-func (sp *PathProvider) Params(c servicescenter2.Container) []interface{} {
+func (sp *PathProvider) Params(c container.Container) []interface{} {
 	return []interface{}{c}
 }
