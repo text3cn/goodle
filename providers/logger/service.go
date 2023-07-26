@@ -12,7 +12,7 @@ type Service interface {
 	Fatal(output string) // panic 级错误
 	// INFO
 	// WARN
-	// ERROR
+	Error(output string)
 
 	Fatalf(output string) string
 }
@@ -34,6 +34,10 @@ func (s *LoggerService) Debug(out string) {
 
 func (s *LoggerService) Fatal(out string) {
 	println("[FATAL]", out)
+}
+
+func (s *LoggerService) Error(out string) {
+	println("[Error]", out)
 }
 
 func (s *LoggerService) Fatalf(out string) string {

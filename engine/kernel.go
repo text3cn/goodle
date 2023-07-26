@@ -3,25 +3,55 @@ package engine
 import (
 	"github.com/spf13/cobra"
 	"github.com/text3cn/goodle/providers/cache"
+	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/httpserver"
 	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/types"
 	"log"
 	"net/http"
 )
 
 // 挂载框架内置命令
-func AddKernelCommands(command *Command, router func(engine *httpserver.GoodleEngine)) {
-	httpServer := &cobra.Command{
-		Use:   "start",
-		Short: "Start as a daemon",
+func AddKernelCommands(command *Command, router types.HttpEngine) {
+	rootCmd := command.rootCmd
+	// 后台运行 http 服务
+	httpServer := cobra.Command{
+		Use:     "start",
+		Short:   "Run as a daemon",
+		Example: "./main start",
 		Run: func(cmd *cobra.Command, args []string) {
-			httpServerDeamon(command, router)
+			// cmd.Help()
+			// 启动子进程
+			//fokr(command, router)
+			// 绘制主进程控制面板
+			drawControl()
 		},
 	}
-	command.cobra.AddCommand(httpServer)
+	// 子命令，前台运行 http 服务
+	httpServer.AddCommand(&cobra.Command{
+		Use:     "foreground",
+		Short:   "Run in foreground",
+		Aliases: []string{"f"},
+		Example: "./main start f",
+		Run: func(cmd *cobra.Command, args []string) {
+			startHttpServer(command, router)
+		},
+	})
+	rootCmd.AddCommand(&httpServer)
+	// 停止后台 http 服务
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "stop",
+		Short: "Stop the daemon",
+		Run: func(cmd *cobra.Command, args []string) {
+			stop(command)
+		},
+	})
+
 }
 
-func httpServerDeamon(command *Command, router func(engine *httpserver.GoodleEngine)) {
+// 启动 http 服务，初始化注册所有内置服务
+func startHttpServer(command *Command, router types.HttpEngine) {
+
 	//cntxt := &daemon.Context{
 	//	// 设置pid文件
 	//	PidFileName: serverPidFile,
@@ -36,22 +66,23 @@ func httpServerDeamon(command *Command, router func(engine *httpserver.GoodleEng
 	//	// 子进程的参数，按照这个参数设置，子进程的命令为 ./main start
 	//	Args: []string{"", "start"},
 	//}
-	startHttpServer(command, router)
-}
 
-func startHttpServer(command *Command, router func(engine *httpserver.GoodleEngine)) {
 	container := command.GetContainer()
-	container.Bind(&httpserver.HttpServerProvider{})
+	// 往 engine 绑定服务是把服务绑定到 http 服务的服务中心
+	// 在 http 服务中又另外 new 了一个服务中心，也就是说与框架的服务中心是隔离的
 	engine := container.NewSingle(httpserver.Name).(*httpserver.HttpServerService).GoodleEngine.WebServer()
-	engine.ServiceProvider(logger.Name, &logger.LoggerServiceProvider{})
-	engine.ServiceProvider(cache.Name, &cache.CacheServiceProvider{})
+	engine.BindProvider(&logger.LoggerServiceProvider{})
+	engine.BindProvider(&config.ConfigProvider{})
+	engine.BindProvider(&cache.CacheServiceProvider{})
 	router(engine) // 把路由保存到 map
+	addr := container.NewSingle(config.Name).(config.Service).GetHttpAddr()
 	server := &http.Server{
 		// 自定义的请求核心处理函数
 		Handler: engine,
 		// 请求监听地址
-		Addr: ":9000",
+		Addr: addr,
 	}
+	logger.Instance().Trace("Server Listen On " + addr)
 	err := server.ListenAndServe()
 	if err != nil {
 		log.Println("[Start http fail]", err)

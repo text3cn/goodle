@@ -3,23 +3,29 @@ package engine
 import (
 	"github.com/spf13/cobra" // https://github.com/spf13/cobra
 	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/httpserver"
+	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/types"
 )
 
 type Command struct {
 	container container.Container
-	cobra     *cobra.Command
+	rootCmd   *cobra.Command
+	config    config.Service
 }
 
 // 初始化根 Command 并运行
-func Run(container container.Container, router func(engine *httpserver.GoodleEngine)) {
+func Run(container container.Container, router types.HttpEngine) {
+	// 往框架的服务中心绑定框架用到的服务
+	container.Bind(&httpserver.HttpServerProvider{})
+	container.Bind(&config.ConfigProvider{})
+	container.Bind(&logger.LoggerServiceProvider{})
 	var cobraRoot = &cobra.Command{
 		// 定义根命令的关键字
 		Use: "./main",
 		// 简短介绍
-		Short: "Goodle Command",
-		// 根命令的详细介绍
-		Long: "Goodle Framework For Command",
+		Short: "Goodle Framework",
 		// 根命令的执行函数
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.InitDefaultHelpFlag()
@@ -30,17 +36,23 @@ func Run(container container.Container, router func(engine *httpserver.GoodleEng
 	}
 	var cmd = &Command{
 		container: container,
-		cobra:     cobraRoot,
+		rootCmd:   cobraRoot,
+		config:    container.NewSingle(config.Name).(config.Service),
 	}
 	// 绑定框架内置的命令
 	AddKernelCommands(cmd, router)
+
 	// 绑定业务的命令
 	// AddAppCommand(rootCmd)
 
-	httpServerDeamon(cmd, router) // 前台运行
-
-	// 执行 RootCommand
-	cmd.cobra.Execute()
+	isDevelop := cmd.config.IsDevelop()
+	if isDevelop {
+		// 直接前台挂起运行
+		startHttpServer(cmd, router)
+	} else {
+		// 命令行运行，执行 RootCommand
+		cmd.rootCmd.Execute()
+	}
 }
 
 func (self *Command) GetContainer() container.Container {

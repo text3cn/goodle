@@ -2,24 +2,24 @@
 package cache
 
 import (
-	servicescenter2 "github.com/text3cn/goodle/container"
+	 "github.com/text3cn/goodle/container"
 	"github.com/text3cn/goodle/providers/logger"
 )
 
 const Name = "cache"
 
 type CacheServiceProvider struct {
-	servicescenter2.ServiceProvider
+	container.ServiceProvider
 }
 
 func (self *CacheServiceProvider) Name() string {
 	return Name
 }
 
-func (sp *CacheServiceProvider) RegisterProviderInstance(c servicescenter2.Container) servicescenter2.NewInstance {
+func (sp *CacheServiceProvider) RegisterProviderInstance(c container.Container) container.NewInstance {
 	return func(params ...interface{}) (interface{}, error) {
 
-		c := params[0].(servicescenter2.Container)
+		c := params[0].(container.Container)
 		return &CacheService{c: c}, nil
 	}
 }
@@ -28,11 +28,11 @@ func (*CacheServiceProvider) IsDefer() bool {
 	return false
 }
 
-func (sp *CacheServiceProvider) Params(c servicescenter2.Container) []interface{} {
+func (sp *CacheServiceProvider) Params(c container.Container) []interface{} {
 	return []interface{}{c}
 }
 
-func (sp *CacheServiceProvider) Boot(c servicescenter2.Container) error {
+func (sp *CacheServiceProvider) Boot(c container.Container) error {
 	logger.Instance().Trace("Boot Cache Provider")
 	return nil
 }

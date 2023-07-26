@@ -72,7 +72,8 @@ func (this *GoodleEngine) AddRoute(methoad, prefix, uri string, routeType int8, 
 
 // 框架核心结构实现 Handler 接口
 func (self *GoodleEngine) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	self.container.NewSingle(logger.Name).(logger.Service).Trace("进入 core.serveHTTP")
+	//self.container.NewSingle(logger.Name).(logger.Service).Trace("进入 core.serveHTTP")
+	logger.Instance().Trace("Enter core.serveHTTP")
 	if request.URL.Path == "/favicon.ico" {
 		return
 	}
@@ -114,8 +115,8 @@ func (this *GoodleEngine) FindRouteHandler(request *http.Request) t3WebRoute {
 	return t3WebRoute{}
 }
 
-// 服务注册其实跟 http 路由一样的原理
-func (self *GoodleEngine) ServiceProvider(name string, provider servicescenter.ServiceProvider) {
+// 为 http 服务绑定服务提供者
+func (self *GoodleEngine) BindProvider(provider servicescenter.ServiceProvider) {
 	self.container.Bind(provider)
 }
 
