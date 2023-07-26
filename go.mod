@@ -1,6 +1,6 @@
 module github.com/text3cn/goodle
 
-go 1.18
+go 1.20
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
