@@ -713,3 +713,5 @@ func EndWith(str, suffix string) bool {
 func StrRepeat(input string, multiplier int) string {
 	return strings.Repeat(input, multiplier)
 }
+
+

@@ -2,8 +2,7 @@ package httpserver
 
 import (
 	"errors"
-	servicescenter "github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/container"
 	"net/http"
 	"strings"
 )
@@ -20,7 +19,7 @@ type GoodleEngine struct {
 	router            map[string]map[string]t3WebRoute
 	globalMiddlewares []RequestHandler
 	groupMiddlewares  map[string][]RequestHandler
-	container         servicescenter.Container
+	container         container.Container
 }
 
 type t3WebRoute struct {
@@ -30,7 +29,7 @@ type t3WebRoute struct {
 }
 
 // 初始化框架核心结构
-func (self *GoodleEngine) WebServer() *GoodleEngine {
+func (self *GoodleEngine) WebServer(serviceCenter container.Container) *GoodleEngine {
 	// 路由 map 的第一维存请求方式，二维存控制器
 	router := map[string]map[string]t3WebRoute{}
 	router["GET"] = map[string]t3WebRoute{}
@@ -40,7 +39,7 @@ func (self *GoodleEngine) WebServer() *GoodleEngine {
 	engine := &GoodleEngine{
 		router:           router,
 		groupMiddlewares: map[string][]RequestHandler{},
-		container:        servicescenter.New(),
+		container:        serviceCenter,
 	}
 	return engine
 }
@@ -73,7 +72,7 @@ func (this *GoodleEngine) AddRoute(methoad, prefix, uri string, routeType int8, 
 // 框架核心结构实现 Handler 接口
 func (self *GoodleEngine) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	//self.container.NewSingle(logger.Name).(logger.Service).Trace("进入 core.serveHTTP")
-	logger.Instance().Trace("Enter core.serveHTTP")
+	//logger.Instance().Trace("Enter core.serveHTTP")
 	if request.URL.Path == "/favicon.ico" {
 		return
 	}
@@ -113,11 +112,6 @@ func (this *GoodleEngine) FindRouteHandler(request *http.Request) t3WebRoute {
 		}
 	}
 	return t3WebRoute{}
-}
-
-// 为 http 服务绑定服务提供者
-func (self *GoodleEngine) BindProvider(provider servicescenter.ServiceProvider) {
-	self.container.Bind(provider)
 }
 
 // 静态资源服务

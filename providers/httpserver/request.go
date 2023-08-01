@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cast"
 	"io/ioutil"
 	"mime/multipart"
+	"net/url"
 )
 
 // 为请求封装方法，在 Context 上实现接口
@@ -32,7 +33,7 @@ type IRequest interface {
 	FormBool(key string, defaultValue ...bool) (bool, bool)
 	FormString(key string, defaultValue ...string) (string, bool)
 	FormStringSlice(key string, defaultValue ...[]string) ([]string, bool)
-	FormFile(key string) (*multipart.FileHeader, error)
+	FormFile(key string, args ...int) (multipart.File, *multipart.FileHeader, url.Values, error)
 	BindJson(obj interface{}) error // json body
 	BindXml(obj interface{}) error  // xml body
 	GetRawData() ([]byte, error)    // 其他格式
@@ -253,19 +254,25 @@ func (req *ReqStruct) FormStringSlice(key string, defaultValue ...[]string) ([]s
 	return []string{}, false
 }
 
-func (req *ReqStruct) FormFile(key string) (*multipart.FileHeader, error) {
-	const defaultValueaultMultipartMemory = 32 << 20 // 32 MB
+// limit[0] 单位：byte
+func (req *ReqStruct) FormFile(key string, limit ...int) (multipart.File, *multipart.FileHeader, url.Values, error) {
+	limitMultipartMemory := 32 << 20 // 32 MB
+	if len(limit) > 0 {
+		limitMultipartMemory = limit[0]
+	}
 	if req.request.MultipartForm == nil {
-		if err := req.request.ParseMultipartForm(defaultValueaultMultipartMemory); err != nil {
-			return nil, err
+		if err := req.request.ParseMultipartForm(int64(limitMultipartMemory)); err != nil {
+			params := req.request.PostForm
+			return nil, nil, params, err
 		}
 	}
-	f, fh, err := req.request.FormFile(key)
+	params := req.request.PostForm
+	f, handler, err := req.request.FormFile(key)
 	if err != nil {
-		return nil, err
+		return nil, nil, params, err
 	}
 	f.Close()
-	return fh, err
+	return f, handler, params, err
 }
 
 func (req *ReqStruct) Form(key string) interface{} {

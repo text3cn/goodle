@@ -14,7 +14,7 @@ import (
 // daemon 启动成功后父进程 return，子进程运行时脱离控制台，
 // 子进程向控制台打印日志时，会被定向到 /dev/null 所以控制台是没有输出的，
 // 因此需要将子进程的输出保存到文件中。
-func fokr(command *Command, router types.HttpEngine) {
+func fork(command *Command, router types.HttpEngine) {
 	processName := strkit.StrReplace("./", "", os.Args[0], 1)
 	runtimePath := command.config.GetRuntimePath()
 	ctx := &daemon.Context{

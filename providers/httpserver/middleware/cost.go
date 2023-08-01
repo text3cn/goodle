@@ -20,7 +20,7 @@ func Cost() httpserver.RequestHandler {
 		// 记录结束时间
 		end := time.Now()
 		cost := end.Sub(start)
-		log.Printf("api uri: %v, cost: %v", c.GetRequest().RequestURI, cost.Seconds())
+		log.Printf("api uri: %v, cost: %v", c.Request().RequestURI, cost.Seconds())
 
 		return nil
 	}

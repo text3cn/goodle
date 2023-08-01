@@ -1,11 +1,15 @@
 package config
 
 import (
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 	"github.com/text3cn/goodle/container"
 	"github.com/text3cn/goodle/kit/filekit"
+	"github.com/text3cn/goodle/types"
 	"path/filepath"
+	"strings"
+	"sync"
 )
 
 // 使用泛型会有编译开销和执行效率开销，也许这点开销对于业务而言并不关心，
@@ -15,6 +19,8 @@ type Service interface {
 	GetHttpAddr() string
 	IsDevelop() bool
 	GetRuntimePath() string
+	LoadConfig(filename string) *viper.Viper
+	GetDatabase() (dbsCfg map[string]types.DBConfig)
 }
 
 // path 服务建立在 config 服务之上，框架需用使用路径的时候直接找 path 服务拿
@@ -22,36 +28,40 @@ type Service interface {
 type ConfigService struct {
 	Service
 	container container.Container
-	mainPath  string // 二进制 main 程序的绝对路径
-	// 一些其他路径，比如日志输出路径等，通过配置文件传递进来，配置文件目录等
+	mainPath  string       // 二进制 main 程序的绝对路径
+	lock      sync.RWMutex // 配置文件读写锁
 }
 
 // 优先使用可执行程序当前目录下的 app.yaml，
 // 然后找 config 目录下的 app.yaml，如果有则将两者合并，前者覆盖后者
-func (self *ConfigService) getDefaultConfig() *viper.Viper {
+func (self *ConfigService) LoadConfig(filename string) *viper.Viper {
 	//fmt.Println("self.mainPath", self.mainPath)
 	var cmdConfig, commonConfig, mergerConfig *viper.Viper
-	// cmd config
-	cmdCfgFile := filepath.Join(self.mainPath, "app.yaml")
+	seg := strings.Split(filename, ".")
+	fName := seg[0]
+	fType := seg[1]
+	cfgFile := fName + "." + fType
+	// app config
+	cmdCfgFile := filepath.Join(self.mainPath, cfgFile)
 	if exists, _ := filekit.PathExists(cmdCfgFile); exists {
 		cfg := viper.New()
 		cfg.AddConfigPath(self.mainPath)
-		cfg.SetConfigName("app")
-		cfg.SetConfigType("yaml")
+		cfg.SetConfigName(fName)
+		cfg.SetConfigType(fType)
 		if err := cfg.ReadInConfig(); err != nil {
 			panic(err)
 		}
 		cmdConfig = cfg
 	}
-	// config
+	// 公共 config
 	configDir := filepath.Dir(filepath.Dir(filepath.Dir(self.mainPath)))
 	configDir = filepath.Join(configDir, "config")
-	defaultConfigFile := filepath.Join(configDir, "app.yaml")
+	defaultConfigFile := filepath.Join(configDir, cfgFile)
 	if exists, _ := filekit.PathExists(defaultConfigFile); exists {
 		cfg := viper.New()
 		cfg.AddConfigPath(configDir)
-		cfg.SetConfigName("app")
-		cfg.SetConfigType("yaml")
+		cfg.SetConfigName(fName)
+		cfg.SetConfigType(fType)
 		if err := cfg.ReadInConfig(); err != nil {
 			panic(err)
 		}
@@ -69,6 +79,10 @@ func (self *ConfigService) getDefaultConfig() *viper.Viper {
 
 	}
 	return mergerConfig
+}
+
+func (self *ConfigService) getDefaultConfig() *viper.Viper {
+	return self.LoadConfig("app.yaml")
 }
 
 // http server listen config
@@ -114,6 +128,48 @@ func (self *ConfigService) GetRuntimePath() string {
 	return self.mainPath
 }
 
-func (s *ConfigService) LogPath() {
+func (self *ConfigService) GetDatabase() (dbsCfg map[string]types.DBConfig) {
+	dbsCfg = make(map[string]types.DBConfig)
+	cfg := self.LoadConfig("database.yaml")
+	cfgNodes := mergerLevel2(cfg)
+	for k, v := range cfgNodes {
+		item := types.DBConfig{}
+		mapstructure.Decode(v, &item)
+		dbsCfg[k] = item
+	}
+	return
+}
 
+// 将多个二级配置合并公共的一级配置项，相同配置项用二级覆盖一级
+func mergerLevel2(source *viper.Viper) (ret map[string]map[string]interface{}) {
+	ret = make(map[string]map[string]interface{})
+	allkeys := source.AllKeys()
+	common := map[string]interface{}{}
+	nodes := map[string]map[string]interface{}{}
+	for _, v := range allkeys {
+		seg := strings.Split(v, ".")
+		if len(seg) == 1 {
+			common[v] = source.Get(v)
+		} else {
+			if nodes[seg[0]] == nil {
+				item := make(map[string]interface{})
+				item[seg[1]] = source.Get(v)
+				nodes[seg[0]] = item
+			} else {
+				nodes[seg[0]][seg[1]] = source.Get(v)
+			}
+		}
+	}
+	for key, node := range nodes {
+		it := map[string]interface{}{}
+		for k, v := range common {
+			it[k] = v
+		}
+		for k, v := range node {
+			it[k] = v
+		}
+		ret[key] = make(map[string]interface{})
+		ret[key] = it
+	}
+	return
 }

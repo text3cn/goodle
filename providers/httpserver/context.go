@@ -56,9 +56,11 @@ func NewContext(r *http.Request, w http.ResponseWriter, container container.Cont
 		handlersIndex: -1,
 		container:     container,
 	}
-	// 框架本身也使用了日志服务，将服务指针注入到 context 中即使用户不用也不会造成开销浪费
-	ctx.Logger = ctx.NewSingleProvider(logger.Name).(logger.Service)
 	return ctx
+}
+
+func (ctx *Context) GetContainer() container.Container {
+	return ctx.container
 }
 
 // 对外暴露锁
@@ -82,7 +84,7 @@ func (ctx *Context) Next() error {
 	return nil
 }
 
-func (ctx *Context) GetRequest() *http.Request {
+func (ctx *Context) Request() *http.Request {
 	return ctx.request
 }
 

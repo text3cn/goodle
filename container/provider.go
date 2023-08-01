@@ -15,8 +15,7 @@ type ServiceProvider interface {
 	// 然后服务中心会被注入到 context 中，那么就可以在任何有 context 的地方调用任何服务了
 	RegisterProviderInstance(Container) NewInstance
 
-	// 决定是否在注册（程序启动）时实例化这个服务，false 代表在第一次 new 的时候进行实例化，
-	// 也就是用到的时候再实例化，没有触发使用就不实例化，也就是按需加载
+	// 决定是否在注册（程序启动）时实例化这个服务，false 则 bind() 时直接实例化，反之在手动调用实例化的时候才进行实例化
 	IsDefer() bool
 
 	// 定义传递给 NewInstance 的参数，可以自定义多个参数

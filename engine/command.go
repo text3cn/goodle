@@ -3,9 +3,10 @@ package engine
 import (
 	"github.com/spf13/cobra" // https://github.com/spf13/cobra
 	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/providers/cache"
 	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/httpserver"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/providers/orm"
 	"github.com/text3cn/goodle/types"
 )
 
@@ -15,12 +16,10 @@ type Command struct {
 	config    config.Service
 }
 
-// 初始化根 Command 并运行
-func Run(container container.Container, router types.HttpEngine) {
-	// 往框架的服务中心绑定框架用到的服务
-	container.Bind(&httpserver.HttpServerProvider{})
-	container.Bind(&config.ConfigProvider{})
-	container.Bind(&logger.LoggerServiceProvider{})
+// 初始化服务容器，绑定根 Command 运行
+func Run(router types.HttpEngine, beforStrt ...types.BeforStartCallback) {
+	c := container.New()
+	initServices(c)
 	var cobraRoot = &cobra.Command{
 		// 定义根命令的关键字
 		Use: "./main",
@@ -35,15 +34,18 @@ func Run(container container.Container, router types.HttpEngine) {
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	var cmd = &Command{
-		container: container,
+		container: c,
 		rootCmd:   cobraRoot,
-		config:    container.NewSingle(config.Name).(config.Service),
+		config:    c.NewSingle(config.Name).(config.Service),
 	}
 	// 绑定框架内置的命令
 	AddKernelCommands(cmd, router)
 
 	// 绑定业务的命令
 	// AddAppCommand(rootCmd)
+	if len(beforStrt) > 0 {
+		beforStrt[0](c)
+	}
 
 	isDevelop := cmd.config.IsDevelop()
 	if isDevelop {
@@ -53,8 +55,14 @@ func Run(container container.Container, router types.HttpEngine) {
 		// 命令行运行，执行 RootCommand
 		cmd.rootCmd.Execute()
 	}
+
 }
 
-func (self *Command) GetContainer() container.Container {
-	return self.container
+func initServices(c container.Container) {
+	c.Bind(&httpserver.HttpServerProvider{})
+	c.Bind(&config.ConfigProvider{})
+	c.Bind(&cache.CacheServiceProvider{})
+	c.Bind(&orm.OrmProvider{})
+	ormService := c.NewSingle(orm.Name).(orm.Service)
+	ormService.Init()
 }

@@ -2,7 +2,6 @@ package engine
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/text3cn/goodle/providers/cache"
 	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/httpserver"
 	"github.com/text3cn/goodle/providers/logger"
@@ -22,7 +21,7 @@ func AddKernelCommands(command *Command, router types.HttpEngine) {
 		Run: func(cmd *cobra.Command, args []string) {
 			// cmd.Help()
 			// 启动子进程
-			//fokr(command, router)
+			fork(command, router)
 			// 绘制主进程控制面板
 			drawControl()
 		},
@@ -50,7 +49,7 @@ func AddKernelCommands(command *Command, router types.HttpEngine) {
 }
 
 // 启动 http 服务，初始化注册所有内置服务
-func startHttpServer(command *Command, router types.HttpEngine) {
+func startHttpServer(cmd *Command, router types.HttpEngine) {
 
 	//cntxt := &daemon.Context{
 	//	// 设置pid文件
@@ -67,21 +66,20 @@ func startHttpServer(command *Command, router types.HttpEngine) {
 	//	Args: []string{"", "start"},
 	//}
 
-	container := command.GetContainer()
+	container := cmd.container
 	// 往 engine 绑定服务是把服务绑定到 http 服务的服务中心
 	// 在 http 服务中又另外 new 了一个服务中心，也就是说与框架的服务中心是隔离的
-	engine := container.NewSingle(httpserver.Name).(*httpserver.HttpServerService).GoodleEngine.WebServer()
-	engine.BindProvider(&logger.LoggerServiceProvider{})
-	engine.BindProvider(&config.ConfigProvider{})
-	engine.BindProvider(&cache.CacheServiceProvider{})
+	engine := container.NewSingle(httpserver.Name).(*httpserver.HttpServerService).GoodleEngine.WebServer(container)
 	router(engine) // 把路由保存到 map
-	addr := container.NewSingle(config.Name).(config.Service).GetHttpAddr()
+	cfgsvc := container.NewSingle(config.Name).(config.Service)
+	addr := cfgsvc.GetHttpAddr()
 	server := &http.Server{
 		// 自定义的请求核心处理函数
 		Handler: engine,
 		// 请求监听地址
 		Addr: addr,
 	}
+
 	logger.Instance().Trace("Server Listen On " + addr)
 	err := server.ListenAndServe()
 	if err != nil {
