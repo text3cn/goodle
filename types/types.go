@@ -2,10 +2,7 @@ package types
 
 import (
 	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/httpserver"
 )
-
-type HttpEngine func(engine *httpserver.GoodleEngine)
 
 type BeforStartCallback func(c container.Container)
 

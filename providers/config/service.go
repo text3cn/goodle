@@ -1,21 +1,26 @@
 package config
 
 import (
+	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/kit/castkit"
 	"github.com/text3cn/goodle/kit/filekit"
+	"github.com/text3cn/goodle/providers/logger"
 	"github.com/text3cn/goodle/types"
 	"path/filepath"
 	"strings"
 	"sync"
 )
 
+var allConfigItem = map[string]interface{}{}
+
 // 使用泛型会有编译开销和执行效率开销，也许这点开销对于业务而言并不关心，
 // 但是作为一个框架 goodle 的理念是尽量不要去增加开销，所以为每个配置项定义了方法
 type Service interface {
-	LogPath()
+	Get(key string) *castkit.GoodleVal
 	GetHttpAddr() string
 	IsDevelop() bool
 	GetRuntimePath() string
@@ -32,16 +37,21 @@ type ConfigService struct {
 	lock      sync.RWMutex // 配置文件读写锁
 }
 
-// 优先使用可执行程序当前目录下的 app.yaml，
-// 然后找 config 目录下的 app.yaml，如果有则将两者合并，前者覆盖后者
+func (self *ConfigService) Get(key string) *castkit.GoodleVal {
+	return &castkit.GoodleVal{allConfigItem[key]}
+}
+
+// 优先使用可执行程序当前目录下的 xxx.yaml，
+// 然后找 config 目录下的 xxx.yaml，如果有则将两者合并，前者覆盖后者
 func (self *ConfigService) LoadConfig(filename string) *viper.Viper {
-	//fmt.Println("self.mainPath", self.mainPath)
+	//logger.Pink("self.mainPath: ", self.mainPath)
+	noneModuleConfig := false
 	var cmdConfig, commonConfig, mergerConfig *viper.Viper
 	seg := strings.Split(filename, ".")
 	fName := seg[0]
 	fType := seg[1]
 	cfgFile := fName + "." + fType
-	// app config
+	// 模块 config
 	cmdCfgFile := filepath.Join(self.mainPath, cfgFile)
 	if exists, _ := filekit.PathExists(cmdCfgFile); exists {
 		cfg := viper.New()
@@ -52,6 +62,8 @@ func (self *ConfigService) LoadConfig(filename string) *viper.Viper {
 			panic(err)
 		}
 		cmdConfig = cfg
+	} else {
+		noneModuleConfig = true
 	}
 	// 公共 config
 	configDir := filepath.Dir(filepath.Dir(filepath.Dir(self.mainPath)))
@@ -66,6 +78,12 @@ func (self *ConfigService) LoadConfig(filename string) *viper.Viper {
 			panic(err)
 		}
 		commonConfig = cfg
+	} else {
+		if noneModuleConfig {
+			logger.Pink("Unable to find configuration file. The configuration file needs to be placed in any of the following directories:")
+			fmt.Println(self.mainPath + filename)
+			fmt.Println(defaultConfigFile + "\n")
+		}
 	}
 	// merger
 	if commonConfig != nil {
@@ -76,7 +94,12 @@ func (self *ConfigService) LoadConfig(filename string) *viper.Viper {
 		for _, v := range allKeys {
 			mergerConfig.Set(v, cmdConfig.Get(v))
 		}
-
+	}
+	// 存一份暴露给用户使用
+	for _, v := range mergerConfig.AllKeys() {
+		if allConfigItem[v] == nil {
+			allConfigItem[v] = mergerConfig.Get(v)
+		}
 	}
 	return mergerConfig
 }

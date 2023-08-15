@@ -20,6 +20,7 @@ type GoodleEngine struct {
 	globalMiddlewares []RequestHandler
 	groupMiddlewares  map[string][]RequestHandler
 	container         container.Container
+	cross             bool
 }
 
 type t3WebRoute struct {
@@ -45,46 +46,64 @@ func (self *GoodleEngine) WebServer(serviceCenter container.Container) *GoodleEn
 }
 
 // 注册全局中间件
-func (this *GoodleEngine) UseMiddleware(handlers ...RequestHandler) {
-	this.globalMiddlewares = handlers
+func (self *GoodleEngine) UseMiddleware(handlers ...RequestHandler) {
+	self.globalMiddlewares = handlers
 }
 
-func (this t3WebRoute) IsEmpty() bool {
-	return this.routeType == 0
+// 跨域
+func (self *GoodleEngine) UseCross() {
+	self.cross = true
+}
+
+func (self t3WebRoute) IsEmpty() bool {
+	return self.routeType == 0
 }
 
 // 添加路由到 map
 // prefix 主要用于请求进来时匹配分组中间件
-func (this *GoodleEngine) AddRoute(methoad, prefix, uri string, routeType int8, handlers ...RequestHandler) {
+func (self *GoodleEngine) AddRoute(methoad, prefix, uri string, routeType int8, handlers ...RequestHandler) {
 	uri = strings.ToLower(uri)
-	if this.router[methoad][uri].routeType != 0 {
+	if self.router[methoad][uri].routeType != 0 {
 		err := errors.New("route exist: " + uri)
 		panic(err)
 	}
 	handlerChain := append(handlers[1:], handlers[0]) // 把响应函数移到中间件后面
-	this.router[methoad][uri] = t3WebRoute{
+	self.router[methoad][uri] = t3WebRoute{
 		handlers:  handlerChain,
 		routeType: routeType,
 		prefix:    prefix,
 	}
 }
 
+func Cross(response http.ResponseWriter) {
+	response.Header().Set("Access-Control-Allow-Origin", "*")
+	response.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	response.Header().Set("Access-Control-Allow-Headers", "*")
+}
+
 // 框架核心结构实现 Handler 接口
 func (self *GoodleEngine) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	//self.container.NewSingle(logger.Name).(logger.Service).Trace("进入 core.serveHTTP")
 	//logger.Instance().Trace("Enter core.serveHTTP")
+	if self.cross {
+		Cross(response)
+	}
 	if request.URL.Path == "/favicon.ico" {
+		return
+	}
+	if request.Method == "OPTIONS" {
+		response.WriteHeader(200)
 		return
 	}
 	// 初始化自定义 context
 	ctx := NewContext(request, response, self.container)
+
 	// 寻找路由，handlers 包含中间件 + 控制器
 	route := self.FindRouteHandler(request)
 	if route.IsEmpty() {
 		ctx.Resp.SetStatus(404).Text("404 not found")
 		return
 	}
-
 	// 添加响应函数的调用链到 context，由 context 发起调用
 	handlersChain := self.globalMiddlewares
 	if route.prefix != "" {
@@ -92,7 +111,6 @@ func (self *GoodleEngine) ServeHTTP(response http.ResponseWriter, request *http.
 	}
 	handlersChain = append(handlersChain, route.handlers...)
 	ctx.SetHandlers(handlersChain)
-
 	// 执行路由绑定的函数，如果返回 err 代表存在内部错误，返回 500 状态码
 	if err := ctx.Next(); err != nil {
 		ctx.Resp.SetStatus(500).Text(err.Error())

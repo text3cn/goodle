@@ -5,13 +5,12 @@ import (
 	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/httpserver"
 	"github.com/text3cn/goodle/providers/logger"
-	"github.com/text3cn/goodle/types"
 	"log"
 	"net/http"
 )
 
 // 挂载框架内置命令
-func AddKernelCommands(command *Command, router types.HttpEngine) {
+func AddKernelCommands(command *Command, router HttpEngine) {
 	rootCmd := command.rootCmd
 	// 后台运行 http 服务
 	httpServer := cobra.Command{
@@ -49,7 +48,7 @@ func AddKernelCommands(command *Command, router types.HttpEngine) {
 }
 
 // 启动 http 服务，初始化注册所有内置服务
-func startHttpServer(cmd *Command, router types.HttpEngine) {
+func startHttpServer(cmd *Command, router HttpEngine) {
 
 	//cntxt := &daemon.Context{
 	//	// 设置pid文件

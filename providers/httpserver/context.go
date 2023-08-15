@@ -3,7 +3,7 @@ package httpserver
 import (
 	"context"
 	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/providers/config"
 	"net/http"
 	"sync"
 	"time"
@@ -33,8 +33,8 @@ type Context struct {
 
 	// 服务中心
 	container container.Container
-	// 日志服务
-	Logger logger.Service
+	// 配置服务
+	Config config.Service
 }
 
 type ReqStruct struct {
@@ -55,6 +55,7 @@ func NewContext(r *http.Request, w http.ResponseWriter, container container.Cont
 		writerMux:     &sync.Mutex{},
 		handlersIndex: -1,
 		container:     container,
+		Config:        container.NewSingle(config.Name).(config.Service),
 	}
 	return ctx
 }

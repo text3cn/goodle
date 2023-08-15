@@ -9,6 +9,10 @@ func Pink(output ...interface{}) {
 	outputWithColor(35, output...)
 }
 
+func Green(output ...interface{}) {
+	outputWithColor(32, output...)
+}
+
 func outputWithColor(color int, v ...interface{}) {
 	// 最后一个参数可以传 deep:数字来设置 calldepth
 	length := len(v)

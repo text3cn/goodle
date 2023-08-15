@@ -17,12 +17,12 @@ func registerRouter(core *httpserver.GoodleEngine) {
 
 	// 使用全局中间件，对所有路由生效
 	core.UseMiddleware(
-		// 开发环境不许要 recover 会把错误栈给吃掉
-		//middleware.Recovery(map[string]interface{}{
-		//	"msg": "Server Error",
-		//}),
-		//middleware.Logger(),
-		//middleware.Timeout(2*time.Second),
+	// 开发环境不许要 recover 会把错误栈给吃掉
+	//middleware.Recovery(map[string]interface{}{
+	//	"msg": "Server Error",
+	//}),
+	//middleware.Logger(),
+	//middleware.Timeout(2*time.Second),
 	)
 
 	// 静态路由
@@ -43,12 +43,10 @@ func Foo(ctx *httpserver.Context) error {
 	//time.Sleep(1 * time.Second)
 	//arr := []string{}
 	//println(arr[2])
-	ctx.Logger.Trace("wowowoow")
 	ctx.NewSingleProvider(cache.Name).(cache.Service).LocalCache("缓存设置")
 	ret, _ := ctx.Req.GetString("a")
 	ctx.Resp.Json(ret)
 	//fmt.Println(c.GetStringSlice("a", []string{}))
-
 	return nil
 }
 

@@ -17,7 +17,7 @@ type Command struct {
 }
 
 // 初始化服务容器，绑定根 Command 运行
-func Run(router types.HttpEngine, beforStrt ...types.BeforStartCallback) {
+func Run(router HttpEngine, beforStrt ...types.BeforStartCallback) {
 	c := container.New()
 	initServices(c)
 	var cobraRoot = &cobra.Command{
