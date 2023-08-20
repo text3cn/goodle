@@ -12,21 +12,24 @@ const (
 	routeTypeGoGroup
 )
 
-type RequestHandler func(c *Context) error
+type MiddlewareHandler func(c *Context) error
+type RequestHandler func(c *Context) // 控制器函数
 
 // 框架核心结构体
 type GoodleEngine struct {
 	router            map[string]map[string]t3WebRoute
-	globalMiddlewares []RequestHandler
-	groupMiddlewares  map[string][]RequestHandler
+	globalMiddlewares []MiddlewareHandler
+	groupMiddlewares  map[string][]MiddlewareHandler
+	requestHandler    RequestHandler
 	container         container.Container
 	cross             bool
 }
 
 type t3WebRoute struct {
-	handlers  []RequestHandler
-	routeType int8 // 路由类型：1.golang 静态路由 2.golang 分组路由
-	prefix    string
+	middlewares    []MiddlewareHandler
+	requestHandler RequestHandler
+	routeType      int8 // 路由类型：1.golang 静态路由 2.golang 分组路由
+	prefix         string
 }
 
 // 初始化框架核心结构
@@ -39,14 +42,14 @@ func (self *GoodleEngine) WebServer(serviceCenter container.Container) *GoodleEn
 	router["DELETE"] = map[string]t3WebRoute{}
 	engine := &GoodleEngine{
 		router:           router,
-		groupMiddlewares: map[string][]RequestHandler{},
+		groupMiddlewares: map[string][]MiddlewareHandler{}, // 分组路由(批量前缀)路由上挂的中间件
 		container:        serviceCenter,
 	}
 	return engine
 }
 
 // 注册全局中间件
-func (self *GoodleEngine) UseMiddleware(handlers ...RequestHandler) {
+func (self *GoodleEngine) UseMiddleware(handlers ...MiddlewareHandler) {
 	self.globalMiddlewares = handlers
 }
 
@@ -61,17 +64,17 @@ func (self t3WebRoute) IsEmpty() bool {
 
 // 添加路由到 map
 // prefix 主要用于请求进来时匹配分组中间件
-func (self *GoodleEngine) AddRoute(methoad, prefix, uri string, routeType int8, handlers ...RequestHandler) {
+func (self *GoodleEngine) AddRoute(methoad, prefix, uri string, routeType int8, handler RequestHandler, middlewares ...MiddlewareHandler) {
 	uri = strings.ToLower(uri)
 	if self.router[methoad][uri].routeType != 0 {
 		err := errors.New("route exist: " + uri)
 		panic(err)
 	}
-	handlerChain := append(handlers[1:], handlers[0]) // 把响应函数移到中间件后面
 	self.router[methoad][uri] = t3WebRoute{
-		handlers:  handlerChain,
-		routeType: routeType,
-		prefix:    prefix,
+		middlewares:    middlewares,
+		requestHandler: handler,
+		routeType:      routeType,
+		prefix:         prefix,
 	}
 }
 
@@ -104,18 +107,19 @@ func (self *GoodleEngine) ServeHTTP(response http.ResponseWriter, request *http.
 		ctx.Resp.SetStatus(404).Text("404 not found")
 		return
 	}
-	// 添加响应函数的调用链到 context，由 context 发起调用
-	handlersChain := self.globalMiddlewares
+	// 注入中间件、控制器给 context
+	middlewareChain := self.globalMiddlewares
 	if route.prefix != "" {
-		handlersChain = append(handlersChain, self.groupMiddlewares[route.prefix]...)
+		middlewareChain = append(middlewareChain, self.groupMiddlewares[route.prefix]...)
 	}
-	handlersChain = append(handlersChain, route.handlers...)
-	ctx.SetHandlers(handlersChain)
-	// 执行路由绑定的函数，如果返回 err 代表存在内部错误，返回 500 状态码
+	ctx.SetMiddwares(middlewareChain)
+	// 执行中间件、控制器
 	if err := ctx.Next(); err != nil {
 		ctx.Resp.SetStatus(500).Text(err.Error())
 		return
 	}
+	// 执行控制器函数
+	route.requestHandler(ctx)
 }
 
 // 匹配路由，如果没有匹配到，返回 nil

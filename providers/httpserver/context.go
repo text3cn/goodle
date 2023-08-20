@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/kit/castkit"
 	"github.com/text3cn/goodle/providers/config"
 	"net/http"
 	"sync"
@@ -14,12 +15,12 @@ import (
 // 所以定制一个自己的 context 很有用，这里将 request 和 response 封装到 context，
 // 这样就可以在整条请求链路中随时处理输入输出
 type Context struct {
-	request       *http.Request
-	Req           IRequest
-	Resp          RespStruct
-	ctx           context.Context
-	handlers      []RequestHandler // 中间件 + 控制器
-	handlersIndex int              // 用数组加索引偏移来实现中间件到控制器的调用链
+	request        *http.Request
+	Req            IRequest
+	Resp           RespStruct
+	ctx            context.Context
+	middwares      []MiddlewareHandler // 中间件
+	middwaresIndex int                 // 用数组加索引偏移来实现中间件到控制器的调用链
 
 	// 边界场景处理：
 	// 异常、超时事件触发时，需要往 responseWriter 中写入信息给客户端，
@@ -35,6 +36,7 @@ type Context struct {
 	container container.Container
 	// 配置服务
 	Config config.Service
+	values map[string]interface{}
 }
 
 type ReqStruct struct {
@@ -49,13 +51,14 @@ type RespStruct struct {
 func NewContext(r *http.Request, w http.ResponseWriter, container container.Container) *Context {
 	req := &ReqStruct{request: r}
 	ctx := &Context{
-		Req:           req,
-		Resp:          RespStruct{request: req, responseWriter: w},
-		ctx:           r.Context(),
-		writerMux:     &sync.Mutex{},
-		handlersIndex: -1,
-		container:     container,
-		Config:        container.NewSingle(config.Name).(config.Service),
+		Req:            req,
+		Resp:           RespStruct{request: req, responseWriter: w},
+		ctx:            r.Context(),
+		writerMux:      &sync.Mutex{},
+		middwaresIndex: -1,
+		container:      container,
+		Config:         container.NewSingle(config.Name).(config.Service),
+		values:         map[string]interface{}{},
 	}
 	return ctx
 }
@@ -69,16 +72,17 @@ func (ctx *Context) WriterMux() *sync.Mutex {
 	return ctx.writerMux
 }
 
-// 每次请求进来时将中间件和响应控制器添加进来
-func (ctx *Context) SetHandlers(handlers []RequestHandler) {
-	ctx.handlers = handlers
+// 请求时中间件
+func (ctx *Context) SetMiddwares(handlers []MiddlewareHandler) {
+	ctx.middwares = handlers
 }
 
 // 按顺序执行中间件
 func (ctx *Context) Next() error {
-	ctx.handlersIndex++
-	if ctx.handlersIndex < len(ctx.handlers) {
-		if err := ctx.handlers[ctx.handlersIndex](ctx); err != nil {
+	// 执行中间件
+	ctx.middwaresIndex++
+	if ctx.middwaresIndex < len(ctx.middwares) {
+		if err := ctx.middwares[ctx.middwaresIndex](ctx); err != nil {
 			return err
 		}
 	}
@@ -129,4 +133,12 @@ func (ctx *Context) NewSingleProvider(name string) interface{} {
 
 func (ctx *Context) NewInstanceProvider(name string, params ...interface{}) interface{} {
 	return ctx.container.NewInstance(name, params)
+}
+
+// 往 context 上设置值/获取值
+func (ctx *Context) SetVal(key string, value interface{}) {
+	ctx.values[key] = value
+}
+func (ctx *Context) GetVal(key string) *castkit.GoodleVal {
+	return &castkit.GoodleVal{ctx.values[key]}
 }

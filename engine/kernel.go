@@ -10,7 +10,7 @@ import (
 )
 
 // 挂载框架内置命令
-func AddKernelCommands(command *Command, router HttpEngine) {
+func AddKernelCommands(command *Command, addr string, router HttpEngine) {
 	rootCmd := command.rootCmd
 	// 后台运行 http 服务
 	httpServer := cobra.Command{
@@ -20,7 +20,7 @@ func AddKernelCommands(command *Command, router HttpEngine) {
 		Run: func(cmd *cobra.Command, args []string) {
 			// cmd.Help()
 			// 启动子进程
-			fork(command, router)
+			fork(command, addr, router)
 			// 绘制主进程控制面板
 			drawControl()
 		},
@@ -32,7 +32,7 @@ func AddKernelCommands(command *Command, router HttpEngine) {
 		Aliases: []string{"f"},
 		Example: "./main start f",
 		Run: func(cmd *cobra.Command, args []string) {
-			startHttpServer(command, router)
+			startHttpServer(command, addr, router)
 		},
 	})
 	rootCmd.AddCommand(&httpServer)
@@ -48,7 +48,7 @@ func AddKernelCommands(command *Command, router HttpEngine) {
 }
 
 // 启动 http 服务，初始化注册所有内置服务
-func startHttpServer(cmd *Command, router HttpEngine) {
+func startHttpServer(cmd *Command, addr string, router HttpEngine) {
 
 	//cntxt := &daemon.Context{
 	//	// 设置pid文件
@@ -71,7 +71,11 @@ func startHttpServer(cmd *Command, router HttpEngine) {
 	engine := container.NewSingle(httpserver.Name).(*httpserver.HttpServerService).GoodleEngine.WebServer(container)
 	router(engine) // 把路由保存到 map
 	cfgsvc := container.NewSingle(config.Name).(config.Service)
-	addr := cfgsvc.GetHttpAddr()
+	cfgAddr := cfgsvc.GetHttpAddr()
+	if cfgAddr != "" {
+		// 如果配置文件配置了端口，则覆盖代码中设置的 addr
+		addr = cfgAddr
+	}
 	server := &http.Server{
 		// 自定义的请求核心处理函数
 		Handler: engine,

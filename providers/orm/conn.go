@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+var isDebug = false
+
 // 在 GetDB 时进行服务初始化，连接数据库
 // 使用 map 保存多个数据，dsn 作为 key 确保单例
 func GetDB(connName ...string) *gorm.DB {
@@ -15,10 +17,14 @@ func GetDB(connName ...string) *gorm.DB {
 	if len(connName) > 0 {
 		key = connName[0]
 	}
+	if isDebug {
+		return instance.dbs[key].Debug()
+	}
 	return instance.dbs[key]
 }
 
 func mysqlOpen(config types.DBConfig) gorm.Dialector {
+	isDebug = config.Debug
 	return mysql.New(mysql.Config{
 		DSN:                       formatDsn(config),
 		DefaultStringSize:         256,   // string 类型字段的默认长度

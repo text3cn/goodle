@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Cost() httpserver.RequestHandler {
+func Cost() httpserver.MiddlewareHandler {
 	// 使用函数回调
 	return func(c *httpserver.Context) error {
 		fmt.Println("use cost middleware")

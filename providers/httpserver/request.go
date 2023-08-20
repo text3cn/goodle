@@ -6,6 +6,8 @@ import (
 	"encoding/xml"
 	"errors"
 	"github.com/spf13/cast"
+	"github.com/text3cn/goodle/kit/castkit"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/url"
@@ -14,6 +16,10 @@ import (
 // 为请求封装方法，在 Context 上实现接口
 // 统一返回值中的 bool 代表请求方是否有传递这个数据过来
 type IRequest interface {
+	BindJson(obj interface{}) error // json body
+	BindXml(obj interface{}) error  // xml body
+	GetRawData() ([]byte, error)    // 其他格式
+
 	// 获取查询字符串中的参数，如: xxx.com?a=foo&b=bar&c[]=barbar
 	Get(key string) interface{}
 	GetInt(key string, defaultValue ...int) (int, bool)
@@ -23,6 +29,16 @@ type IRequest interface {
 	GetBool(key string, defaultValue ...bool) (bool, bool)
 	GetString(key string, defaultValue ...string) (string, bool)
 	GetStringSlice(key string, defaultValue ...[]string) ([]string, bool)
+
+	// Post、Put
+	post(key string) (castkit.GoodleVal, bool)
+	PostInt(key string, defaultValue ...int) (int, bool)
+	PostInt32(key string, defaultValue ...int32) (int32, bool)
+	PostInt64(key string, defaultValue ...int64) (int64, bool)
+	PostFloat32(key string, defaultValue ...float32) (float32, bool)
+	PostFloat64(key string, defaultValue ...float64) (float64, bool)
+	PostString(key string, defaultValue ...string) (string, bool)
+	PostBool(key string, defaultValue ...bool) (bool, bool)
 
 	// form 表单中的参数
 	Form(key string) interface{}
@@ -34,9 +50,6 @@ type IRequest interface {
 	FormString(key string, defaultValue ...string) (string, bool)
 	FormStringSlice(key string, defaultValue ...[]string) ([]string, bool)
 	FormFile(key string, args ...int) (multipart.File, *multipart.FileHeader, url.Values, error)
-	BindJson(obj interface{}) error // json body
-	BindXml(obj interface{}) error  // xml body
-	GetRawData() ([]byte, error)    // 其他格式
 
 	// 其他格式
 	Uri() string
@@ -394,3 +407,99 @@ func (req *ReqStruct) Cookie(key string) (string, bool) {
 	}
 	return "", false
 }
+
+// /////////////////////////// POST START //////////////////////////////
+func (req *ReqStruct) post(key string) (castkit.GoodleVal, bool) {
+	ret := castkit.GoodleVal{}
+	if req.request != nil {
+		body, err := io.ReadAll(req.request.Body)
+		if err != nil {
+			return ret, false
+		}
+		params := map[string]interface{}{}
+		json.Unmarshal(body, &params)
+		if params[key] != nil {
+			return castkit.GoodleVal{params[key]}, true
+		}
+	}
+	return ret, false
+}
+
+func (req *ReqStruct) PostInt(key string, defaultValue ...int) (int, bool) {
+	data, ok := req.post(key)
+	if ok {
+		return data.ToInt(), ok
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0], false
+	}
+	return 0, false
+}
+
+func (req *ReqStruct) PostInt32(key string, defaultValue ...int32) (int32, bool) {
+	data, ok := req.post(key)
+	if ok {
+		return data.ToInt32(), ok
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0], false
+	}
+	return 0, false
+}
+
+func (req *ReqStruct) PostInt64(key string, defaultValue ...int64) (int64, bool) {
+	data, ok := req.post(key)
+	if ok {
+		return data.ToInt64(), ok
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0], false
+	}
+	return 0, false
+}
+
+func (req *ReqStruct) PostFloat32(key string, defaultValue ...float32) (float32, bool) {
+	data, ok := req.post(key)
+	if ok {
+		return data.ToFloat32(), ok
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0], false
+	}
+	return 0, false
+}
+
+func (req *ReqStruct) PostFloat64(key string, defaultValue ...float64) (float64, bool) {
+	data, ok := req.post(key)
+	if ok {
+		return data.ToFloat64(), ok
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0], false
+	}
+	return 0, false
+}
+
+func (req *ReqStruct) PostString(key string, defaultValue ...string) (string, bool) {
+	data, ok := req.post(key)
+	if ok {
+		return data.ToString(), ok
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0], false
+	}
+	return "", false
+}
+
+func (req *ReqStruct) PostBool(key string, defaultValue ...bool) (bool, bool) {
+	data, ok := req.post(key)
+	if ok {
+		return data.ToBool(), ok
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0], false
+	}
+	return false, false
+}
+
+///////////////////////////// POST END //////////////////////////////

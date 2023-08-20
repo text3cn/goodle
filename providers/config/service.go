@@ -110,7 +110,7 @@ func (self *ConfigService) getDefaultConfig() *viper.Viper {
 
 // http server listen config
 func (self *ConfigService) GetHttpAddr() string {
-	addr := ":80"
+	addr := ""
 	if cfg := self.getDefaultConfig(); cfg != nil {
 		if value, ok := cfg.Get("http.port").(int); !ok {
 			panic("The configuration of http.port is not a valid value")

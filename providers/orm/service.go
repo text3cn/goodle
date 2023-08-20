@@ -7,6 +7,7 @@ import (
 	"github.com/text3cn/goodle/providers/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"time"
 )
 
@@ -37,7 +38,10 @@ func (self *OrmService) Init() {
 		var sqlDB *sql.DB
 		switch config.Driver {
 		case "mysql":
-			db, err = gorm.Open(mysqlOpen(config), &gorm.Config{})
+			db, err = gorm.Open(mysqlOpen(config), &gorm.Config{
+				// 禁用自动迁移创建的表名称复数形式
+				NamingStrategy: schema.NamingStrategy{SingularTable: true},
+			})
 		case "sqlite":
 			db, err = gorm.Open(sqlite.Open(config.Database), &gorm.Config{})
 		}

@@ -17,7 +17,7 @@ type Command struct {
 }
 
 // 初始化服务容器，绑定根 Command 运行
-func Run(router HttpEngine, beforStrt ...types.BeforStartCallback) {
+func Run(router HttpEngine, addr string, beforStrt ...types.BeforStartCallback) {
 	c := container.New()
 	initServices(c)
 	var cobraRoot = &cobra.Command{
@@ -39,7 +39,7 @@ func Run(router HttpEngine, beforStrt ...types.BeforStartCallback) {
 		config:    c.NewSingle(config.Name).(config.Service),
 	}
 	// 绑定框架内置的命令
-	AddKernelCommands(cmd, router)
+	AddKernelCommands(cmd, addr, router)
 
 	// 绑定业务的命令
 	// AddAppCommand(rootCmd)
@@ -50,7 +50,7 @@ func Run(router HttpEngine, beforStrt ...types.BeforStartCallback) {
 	isDevelop := cmd.config.IsDevelop()
 	if isDevelop {
 		// 直接前台挂起运行
-		startHttpServer(cmd, router)
+		startHttpServer(cmd, addr, router)
 	} else {
 		// 命令行运行，执行 RootCommand
 		cmd.rootCmd.Execute()

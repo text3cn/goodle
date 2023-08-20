@@ -9,7 +9,7 @@ import (
 )
 
 // http 请求超时控制的中间件
-func Timeout(timeout time.Duration) httpserver.RequestHandler {
+func Timeout(timeout time.Duration) httpserver.MiddlewareHandler {
 	// 使用回调函数，返回一个匿名函数保存到 handlers，由 context.Next() 进行调用
 	return func(ctx *httpserver.Context) error {
 		fmt.Println("use timeout middleware")

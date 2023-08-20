@@ -5,11 +5,11 @@ import "strings"
 
 // IGroup 路由分组接口
 type IGroup interface {
-	Get(string, ...RequestHandler)
-	Post(string, ...RequestHandler)
-	Put(string, ...RequestHandler)
-	Delete(string, ...RequestHandler)
-	UseMiddleware(...RequestHandler) IGroup
+	Get(string, RequestHandler, ...MiddlewareHandler)
+	Post(string, RequestHandler, ...MiddlewareHandler)
+	Put(string, RequestHandler, ...MiddlewareHandler)
+	Delete(string, RequestHandler, ...MiddlewareHandler)
+	UseMiddleware(...MiddlewareHandler) IGroup
 }
 
 // 实现了 IGroup，按前缀分组
@@ -26,28 +26,28 @@ func NewPrefix(core *GoodleEngine, prefix string) *Prefix {
 	}
 }
 
-func (p *Prefix) Get(uri string, handlers ...RequestHandler) {
+func (p *Prefix) Get(uri string, handler RequestHandler, middlewares ...MiddlewareHandler) {
 	uri = strings.ToLower(p.prefix + uri)
-	p.httpCore.AddRoute("GET", p.prefix, uri, routeTypeGoGroup, handlers...)
+	p.httpCore.AddRoute("GET", p.prefix, uri, routeTypeGoGroup, handler, middlewares...)
 }
 
-func (p *Prefix) Post(uri string, handlers ...RequestHandler) {
+func (p *Prefix) Post(uri string, handler RequestHandler, middlewares ...MiddlewareHandler) {
 	uri = strings.ToLower(p.prefix + uri)
-	p.httpCore.AddRoute("POST", p.prefix, uri, routeTypeGoGroup, handlers...)
+	p.httpCore.AddRoute("POST", p.prefix, uri, routeTypeGoGroup, handler, middlewares...)
 }
 
-func (p *Prefix) Put(uri string, handlers ...RequestHandler) {
+func (p *Prefix) Put(uri string, handler RequestHandler, middlewares ...MiddlewareHandler) {
 	uri = strings.ToLower(p.prefix + uri)
-	p.httpCore.AddRoute("PUT", p.prefix, uri, routeTypeGoGroup, handlers...)
+	p.httpCore.AddRoute("PUT", p.prefix, uri, routeTypeGoGroup, handler, middlewares...)
 }
 
-func (p *Prefix) Delete(uri string, handlers ...RequestHandler) {
+func (p *Prefix) Delete(uri string, handler RequestHandler, middlewares ...MiddlewareHandler) {
 	uri = strings.ToLower(p.prefix + uri)
-	p.httpCore.AddRoute("DELETE", p.prefix, uri, routeTypeGoGroup, handlers...)
+	p.httpCore.AddRoute("DELETE", p.prefix, uri, routeTypeGoGroup, handler, middlewares...)
 }
 
-func (p *Prefix) UseMiddleware(handlers ...RequestHandler) IGroup {
-	p.httpCore.groupMiddlewares[p.prefix] = handlers
+func (p *Prefix) UseMiddleware(middlewares ...MiddlewareHandler) IGroup {
+	p.httpCore.groupMiddlewares[p.prefix] = middlewares
 	return p
 }
 

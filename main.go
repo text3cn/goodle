@@ -37,7 +37,7 @@ func registerRouter(core *httpserver.GoodleEngine) {
 	}
 }
 
-func Foo(ctx *httpserver.Context) error {
+func Foo(ctx *httpserver.Context) {
 	// 日志属于内置服务，不需要在这实例化，直接框架启动时实例化扔进 context 直接用
 	// IsBind 检查下，不然用户业务服务会覆盖内置服务
 	//time.Sleep(1 * time.Second)
@@ -47,16 +47,14 @@ func Foo(ctx *httpserver.Context) error {
 	ret, _ := ctx.Req.GetString("a")
 	ctx.Resp.Json(ret)
 	//fmt.Println(c.GetStringSlice("a", []string{}))
-	return nil
 }
 
-func Bar(c *httpserver.Context) error {
+func Bar(c *httpserver.Context) {
 	c.Resp.Json("bar")
-	return nil
+
 }
 
-func Action2(c *httpserver.Context) error {
+func Action2(c *httpserver.Context) {
 	time.Sleep(0 * time.Second)
 	c.Resp.Json("ok2")
-	return nil
 }
