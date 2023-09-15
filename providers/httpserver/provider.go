@@ -2,14 +2,14 @@
 package httpserver
 
 import (
-	servicescenter2 "github.com/text3cn/goodle/container"
+	container "github.com/text3cn/goodle/container"
 	"github.com/text3cn/goodle/providers/logger"
 )
 
 const Name = "httpserver"
 
 type HttpServerProvider struct {
-	servicescenter2.ServiceProvider
+	container.ServiceProvider
 	HttpServer *GoodleEngine
 }
 
@@ -17,23 +17,27 @@ func (self *HttpServerProvider) Name() string {
 	return Name
 }
 
-func (self *HttpServerProvider) Boot(c servicescenter2.Container) error {
-	logger.Instance().Trace("Boot HttpServer Provider")
+func (self *HttpServerProvider) BeforeInit(c container.Container) error {
+	logger.Instance().Trace("BeforeInit HttpServer Provider")
 	//self.HttpServer
 	return nil
 }
 
-func (sp *HttpServerProvider) RegisterProviderInstance(c servicescenter2.Container) servicescenter2.NewInstance {
+func (sp *HttpServerProvider) RegisterProviderInstance(c container.Container) container.NewInstanceFunc {
 	return func(params ...interface{}) (interface{}, error) {
-		c := params[0].(servicescenter2.Container)
+		c := params[0].(container.Container)
 		return &HttpServerService{container: c}, nil
 	}
 }
 
-func (*HttpServerProvider) IsDefer() bool {
-	return false
+func (*HttpServerProvider) InitOnBoot() bool {
+	return true
 }
 
-func (sp *HttpServerProvider) Params(c servicescenter2.Container) []interface{} {
+func (sp *HttpServerProvider) Params(c container.Container) []interface{} {
 	return []interface{}{c}
+}
+
+func (*HttpServerProvider) AfterInit(instance any) error {
+	return nil
 }

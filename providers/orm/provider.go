@@ -17,14 +17,14 @@ func (self *OrmProvider) Name() string {
 	return Name
 }
 
-func (*OrmProvider) RegisterProviderInstance(c container.Container) container.NewInstance {
+func (*OrmProvider) RegisterProviderInstance(c container.Container) container.NewInstanceFunc {
 	return func(params ...interface{}) (interface{}, error) {
 		instance = &OrmService{c: c}
 		return instance, nil
 	}
 }
 
-func (*OrmProvider) IsDefer() bool {
+func (*OrmProvider) InitOnBoot() bool {
 	return false
 }
 
@@ -32,7 +32,7 @@ func (*OrmProvider) Params(c container.Container) []interface{} {
 	return []interface{}{c}
 }
 
-func (*OrmProvider) Boot(c container.Container) error {
-	logger.Pink("Boot Orm Provider")
+func (*OrmProvider) BeforeInit(c container.Container) error {
+	logger.Instance().Trace("BeforeInit Orm Provider")
 	return nil
 }

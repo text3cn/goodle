@@ -2,9 +2,11 @@ package httpserver
 
 import (
 	"context"
+	"github.com/text3cn/goodle/config"
 	"github.com/text3cn/goodle/container"
 	"github.com/text3cn/goodle/kit/castkit"
-	"github.com/text3cn/goodle/providers/config"
+	"github.com/text3cn/goodle/providers/cache"
+	"github.com/text3cn/goodle/providers/redis"
 	"net/http"
 	"sync"
 	"time"
@@ -16,12 +18,9 @@ import (
 // 这样就可以在整条请求链路中随时处理输入输出
 type Context struct {
 	request        *http.Request
-	Req            IRequest
-	Resp           RespStruct
-	ctx            context.Context
+	context        context.Context
 	middwares      []MiddlewareHandler // 中间件
 	middwaresIndex int                 // 用数组加索引偏移来实现中间件到控制器的调用链
-
 	// 边界场景处理：
 	// 异常、超时事件触发时，需要往 responseWriter 中写入信息给客户端，
 	// 这时候如果有其他 Goroutine 也在操作 responseWriter 可能会出现 responseWriter 中的信息重复写入，
@@ -31,39 +30,38 @@ type Context struct {
 	// 2. 添加标记，当发生 timeout 时设置标记位为 true，在 Context 提供的写 response 函数中，
 	//    先读取标记位，如果为 true，表示已经给客户端返回过了，就不要再写 response 了。
 	hasTimeout bool
-
 	// 服务中心
 	container container.Container
+	values    map[string]interface{}
+
 	// 配置服务
+	Req    IRequest
+	Resp   RespStruct
 	Config config.Service
-	values map[string]interface{}
+	Cache  cache.Service
+	Redis  redis.Service
 }
 
-type ReqStruct struct {
-	IRequest
-	request *http.Request
-}
-type RespStruct struct {
-	request        *ReqStruct
-	responseWriter http.ResponseWriter
-}
-
-func NewContext(r *http.Request, w http.ResponseWriter, container container.Container) *Context {
+func NewContext(r *http.Request, w http.ResponseWriter, holder container.Container) *Context {
 	req := &ReqStruct{request: r}
 	ctx := &Context{
-		Req:            req,
-		Resp:           RespStruct{request: req, responseWriter: w},
-		ctx:            r.Context(),
+		context:        r.Context(),
 		writerMux:      &sync.Mutex{},
 		middwaresIndex: -1,
-		container:      container,
-		Config:         container.NewSingle(config.Name).(config.Service),
+		container:      holder,
 		values:         map[string]interface{}{},
+
+		Req:    req,
+		Resp:   RespStruct{request: req, responseWriter: w},
+		Config: config.Instance(),
+		Cache:  holder.NewSingle(cache.Name).(cache.Service),
+		Redis:  holder.NewSingle(redis.Name).(redis.Service),
 	}
 	return ctx
 }
 
-func (ctx *Context) GetContainer() container.Container {
+// 对用户暴露服务者中心
+func (ctx *Context) Holder() container.Container {
 	return ctx.container
 }
 
@@ -106,24 +104,24 @@ func (ctx *Context) HasTimeout() bool {
 }
 
 func (ctx *Context) BaseContext() context.Context {
-	return ctx
+	return ctx.context
 }
 
 // #region implement context.Context
 func (ctx *Context) Deadline() (deadline time.Time, ok bool) {
-	return ctx.BaseContext().Deadline()
+	return ctx.context.Deadline()
 }
 
 func (ctx *Context) Done() <-chan struct{} {
-	return ctx.BaseContext().Done()
+	return ctx.context.Done()
 }
 
 func (ctx *Context) Err() error {
-	return ctx.BaseContext().Err()
+	return ctx.context.Err()
 }
 
 func (ctx *Context) Value(key interface{}) interface{} {
-	return ctx.BaseContext().Value(key)
+	return ctx.context.Value(key)
 }
 
 // 将服务注册到服务中心

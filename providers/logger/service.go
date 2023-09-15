@@ -35,7 +35,7 @@ type LoggerService struct {
 
 // 实现接口
 func (s *LoggerService) Trace(out ...interface{}) {
-	println("[TRACE]", out)
+	println("[TRACE]", out[0].(string))
 }
 
 func (s *LoggerService) Debug(out ...interface{}) {
@@ -55,7 +55,7 @@ func (s *LoggerService) Warn(out ...interface{}) {
 }
 
 func (s *LoggerService) Error(out ...interface{}) {
-	println("[Error]", out)
+	println("[Error]", out[0].(string))
 }
 
 func (s *LoggerService) Fatalf(out ...interface{}) string {

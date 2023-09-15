@@ -2,6 +2,8 @@ package engine
 
 import (
 	"github.com/sevlyar/go-daemon"
+	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/kit/filekit"
 	"github.com/text3cn/goodle/kit/strkit"
 	"github.com/text3cn/goodle/providers/logger"
 	"os"
@@ -13,9 +15,10 @@ import (
 // daemon 启动成功后父进程 return，子进程运行时脱离控制台，
 // 子进程向控制台打印日志时，会被定向到 /dev/null 所以控制台是没有输出的，
 // 因此需要将子进程的输出保存到文件中。
-func fork(command *Command, addr string, router HttpEngine) {
+func fork(c *container.ServicesContainer, command *Command, addr string, router HttpEngine) {
 	processName := strkit.StrReplace("./", "", os.Args[0], 1)
 	runtimePath := command.config.GetRuntimePath()
+	filekit.MkDir(runtimePath, 0777)
 	ctx := &daemon.Context{
 		PidFileName: filepath.Join(runtimePath, processName+".pid"),
 		PidFilePerm: 0644,
@@ -36,7 +39,7 @@ func fork(command *Command, addr string, router HttpEngine) {
 		return
 	}
 	// 子进程启动 http 服务
-	go startHttpServer(command, addr, router)
+	go startHttpServer(c, addr, router)
 	// 优雅关闭，退出进程有以下四种信号：
 	// SIGINT  : 前台运行模式下 Windows/Linux 都可以通过 Ctrl+C 键来产生 SIGINT 信号请求中断进程
 	// SIGQUIT : 与 SIGINT 类似，前台模式下 Ctrl+\ 通知进程中断，唯一不同是默认会产生 core 文件

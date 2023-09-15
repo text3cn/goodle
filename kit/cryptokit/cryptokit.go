@@ -103,11 +103,11 @@ func Base64Decode(str string) (string, error) {
 	return string(data), nil
 }
 
-func Encrypt(secret string) {
-
+func DynamicEncrypt(secret string, str string) string {
+	return dynamicEncryption(secret, str, "encode")
 }
 
-func Decrypt(secret string, str string) string {
+func DynamicDecrypt(secret string, str string) string {
 	return dynamicEncryption(secret, str, "decode")
 }
 

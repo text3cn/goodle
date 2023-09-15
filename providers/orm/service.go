@@ -2,8 +2,8 @@ package orm
 
 import (
 	"database/sql"
+	goodleconfig "github.com/text3cn/goodle/config"
 	"github.com/text3cn/goodle/container"
-	goodleconfig "github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -23,9 +23,9 @@ type OrmService struct {
 
 }
 
-// 如果能获取到配置文件则进行数据库连接
+// 如果能获取到配置文件则进行数据库连接，这个目前在 engine/run.go -> initServices() 中直接实例化了
 func (self *OrmService) Init() {
-	configService := self.c.NewSingle(goodleconfig.Name).(goodleconfig.Service)
+	configService := goodleconfig.Instance()
 	dbsCfg := configService.GetDatabase()
 	if dbsCfg == nil {
 		logger.Pink("database config error")

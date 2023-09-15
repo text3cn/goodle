@@ -5,14 +5,12 @@ import (
 )
 
 type Service interface {
-	LocalCache(output string)
+	FreeCache(string) *freeCacheHolder
+	BigCache(string) *bigCacheHolder
+	FastCache(string) *fastCacheHolder
 }
 
 type CacheService struct {
 	Service
-	c container.Container
-}
-
-func (s *CacheService) LocalCache(out string) {
-	println("[缓存]", out)
+	holder container.Container
 }

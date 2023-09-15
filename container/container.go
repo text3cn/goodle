@@ -23,7 +23,7 @@ type Container interface {
 	// 根据服务名称获取一个非单例服务
 	// 它是根据服务提供者注册的启动函数和传递的 params 参数实例化出来的
 	// 这个函数在需要为不同参数启动不同实例的时候非常有用
-	NewInstance(key string, params []interface{}) interface{}
+	NewInstance(name string, params []interface{}) interface{}
 }
 
 // 服务容器的具体实现，其功能就是保存所有注册进来的服务和获取一个服务
@@ -55,8 +55,8 @@ func (self *ServicesContainer) Bind(provider ServiceProvider) error {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 	self.providers[name] = provider
-	if provider.IsDefer() == false {
-		if err := provider.Boot(self); err != nil {
+	if provider.InitOnBoot() == true {
+		if err := provider.BeforeInit(self); err != nil {
 			return err
 		}
 		// 实例化服务提供者
@@ -67,6 +67,10 @@ func (self *ServicesContainer) Bind(provider ServiceProvider) error {
 			return errors.New(err.Error())
 		}
 		self.instances[name] = instance
+		err = provider.AfterInit(instance)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -82,6 +86,15 @@ func (self *ServicesContainer) NewSingle(name string) interface{} {
 		panic(err)
 	}
 	return serv
+}
+
+// 不走单例，来一个实例化一个
+func (self *ServicesContainer) NewInstance(key string, params []interface{}) interface{} {
+	svc, err := self.make(key, params, true)
+	if err != nil {
+		panic(err)
+	}
+	return svc
 }
 
 // 实例化一个服务
@@ -119,7 +132,7 @@ func (self *ServicesContainer) findServiceProvider(name string) ServiceProvider 
 }
 
 func (this *ServicesContainer) makeNewInstance(sp ServiceProvider, params []interface{}) (interface{}, error) {
-	if err := sp.Boot(this); err != nil {
+	if err := sp.BeforeInit(this); err != nil {
 		return nil, err
 	}
 	if params == nil {
@@ -127,15 +140,14 @@ func (this *ServicesContainer) makeNewInstance(sp ServiceProvider, params []inte
 	}
 	method := sp.RegisterProviderInstance(this)
 	ins, err := method(params...)
+	err = sp.AfterInit(ins)
+	if err != nil {
+		return ins, err
+	}
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 	return ins, err
-}
-
-// 不走单例，来一个实例化一个
-func (self *ServicesContainer) newInstance(key string, params []interface{}) (interface{}, error) {
-	return self.make(key, params, true)
 }
 
 // 输出服务容器中注册的关键字
