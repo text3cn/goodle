@@ -14,12 +14,12 @@ type IGroup interface {
 
 // 实现了 IGroup，按前缀分组
 type Prefix struct {
-	httpCore *GoodleEngine
+	httpCore *Engine
 	prefix   string // 这个group的通用前缀
 }
 
 // 初始化前缀分组
-func NewPrefix(core *GoodleEngine, prefix string) *Prefix {
+func NewPrefix(core *Engine, prefix string) *Prefix {
 	return &Prefix{
 		httpCore: core,
 		prefix:   prefix,
@@ -52,6 +52,6 @@ func (p *Prefix) UseMiddleware(middlewares ...MiddlewareHandler) IGroup {
 }
 
 // 实现 Group 方法
-func (hc *GoodleEngine) Prefix(prefix string) IGroup {
+func (hc *Engine) Prefix(prefix string) IGroup {
 	return NewPrefix(hc, prefix)
 }

@@ -27,7 +27,7 @@ var allConfigItem = map[string]interface{}{}
 type Service interface {
 	Get(key string) *castkit.GoodleVal
 	GetHttpAddr() string
-	IsDevelop() bool
+	IsDebug() bool
 	IsDaemon() bool
 	GetRuntimePath() string
 	LoadConfig(filename string) (*viper.Viper, error)
@@ -68,8 +68,8 @@ func (self *ConfigService) GetHttpAddr() string {
 }
 
 // 是否后台运行
-func (self *ConfigService) IsDevelop() bool {
-	key := "develop"
+func (self *ConfigService) IsDebug() bool {
+	key := "debug"
 	if cfg, _ := self.getAppConfig(); cfg != nil {
 		if cfg.IsSet(key) {
 			if val, ok := cfg.Get(key).(bool); !ok {

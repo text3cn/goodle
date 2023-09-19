@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-type HttpEngine func(engine *httpserver.GoodleEngine)
+type HttpEngine func(engine *httpserver.Engine)
 
 type Command struct {
 	container container.Container
@@ -118,7 +118,7 @@ func AddKernelCommands(c *container.ServicesContainer, command *Command, addr st
 
 // 启动 http 服务，初始化注册所有内置服务
 func startHttpServer(c *container.ServicesContainer, addr string, router HttpEngine) {
-	engine := c.NewSingle(httpserver.Name).(*httpserver.HttpServerService).GoodleEngine.WebServer(c)
+	engine := c.NewSingle(httpserver.Name).(*httpserver.HttpServerService).Engine.NewHttpEngine(c)
 	router(engine) // 把路由保存到 map
 	cfgsvc := config.Instance()
 	// 代码中没有传递端口则去配置文件找

@@ -7,7 +7,7 @@ import (
 
 func Logger() httpserver.MiddlewareHandler {
 	return func(c *httpserver.Context) error {
-		fmt.Println("use logger middleware")
+		fmt.Println("Use logger middleware")
 		c.Next()
 		return nil
 	}

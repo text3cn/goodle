@@ -6,5 +6,5 @@ import (
 
 type HttpServerService struct {
 	container container.Container
-	*GoodleEngine
+	*Engine
 }

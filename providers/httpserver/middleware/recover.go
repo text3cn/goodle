@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"github.com/text3cn/goodle/config"
 	"github.com/text3cn/goodle/providers/httpserver"
 	"log"
 	"net"
@@ -13,6 +14,9 @@ import (
 // recovery 机制，对协程中的函数异常进行捕获，这个应该作为最外层，即第一个被调用的中间件
 func Recovery(diyMsg map[string]interface{}) httpserver.MiddlewareHandler {
 	calback := func(c *httpserver.Context) error {
+		if config.Instance().IsDebug() {
+			return nil
+		}
 		println("use recovery middleware")
 		// 捕获 c.Next() 出现的panic
 		isAbort := false

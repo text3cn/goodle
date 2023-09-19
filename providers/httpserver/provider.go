@@ -10,7 +10,7 @@ const Name = "httpserver"
 
 type HttpServerProvider struct {
 	container.ServiceProvider
-	HttpServer *GoodleEngine
+	HttpServer *Engine
 }
 
 func (self *HttpServerProvider) Name() string {
