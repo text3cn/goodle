@@ -1,10 +1,11 @@
 package swagger
 
 import (
+	"github.com/go-chi/chi"
 	"github.com/spf13/cast"
 	httpSwagger "github.com/swaggo/http-swagger"
-	goodleconfig "github.com/text3cn/goodle/config"
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/config"
 	"net/http"
 )
 
@@ -14,18 +15,26 @@ type Service interface {
 
 type SwaggerService struct {
 	Service
-	c container.Container
+	c core.Container
 }
 
 func (self *SwaggerService) Init() {
-	configService := goodleconfig.Instance()
+	configService := self.c.NewSingle(core.Config).(config.Service)
 	cfg := configService.GetSwagger()
 	port := cast.ToString(cfg.SwaggerUiPort)
-	http.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, cfg.FilePath)
-	})
-	http.HandleFunc("/", httpSwagger.Handler(
+
+	r := chi.NewRouter()
+	r.Get("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("http://"+cfg.SwaggerUiHost+":"+port+"/swagger"),
 	))
-	go http.ListenAndServe(":"+port, nil)
+
+	go http.ListenAndServe(":"+port, r)
+
+	//http.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
+	//	http.ServeFile(w, r, cfg.FilePath)
+	//})
+	//http.HandleFunc("/s", httpSwagger.Handler(
+	//	httpSwagger.URL("http://"+cfg.SwaggerUiHost+":"+port+"/swagger"),
+	//))
+	//go http.ListenAndServe(":"+port, nil)
 }

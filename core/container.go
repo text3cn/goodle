@@ -1,4 +1,4 @@
-package container
+package core
 
 import (
 	"errors"
@@ -48,12 +48,12 @@ func New() *ServicesContainer {
 
 // 将服务提供者的数据结构绑定到服务中心
 func (self *ServicesContainer) Bind(provider ServiceProvider) error {
+	self.lock.Lock()
+	self.lock.Unlock()
 	name := provider.Name()
 	if self.IsBind(name) {
 		panic("Duplicate services provider name")
 	}
-	self.lock.Lock()
-	defer self.lock.Unlock()
 	self.providers[name] = provider
 	if provider.InitOnBoot() == true {
 		if err := provider.BeforeInit(self); err != nil {

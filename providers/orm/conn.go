@@ -2,8 +2,8 @@ package orm
 
 import (
 	"github.com/spf13/cast"
-	"github.com/text3cn/goodle/config"
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/types"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"strconv"
@@ -13,7 +13,7 @@ var isDebug = false
 
 // 在 GetDB 时进行服务初始化，连接数据库
 // 使用 map 保存多个数据，dsn 作为 key 确保单例
-func GetDB(c container.Container, connName ...string) *gorm.DB {
+func GetDB(c core.Container, connName ...string) *gorm.DB {
 	if instance == nil {
 		ormService := c.NewSingle(Name).(Service)
 		ormService.Init()
@@ -28,7 +28,7 @@ func GetDB(c container.Container, connName ...string) *gorm.DB {
 	return instance.dbs[key]
 }
 
-func mysqlOpen(config config.DBConfig) gorm.Dialector {
+func mysqlOpen(config types.DBConfig) gorm.Dialector {
 	isDebug = config.Debug
 	return mysql.New(mysql.Config{
 		DSN:                       formatDsn(config),
@@ -42,7 +42,7 @@ func mysqlOpen(config config.DBConfig) gorm.Dialector {
 
 // 生成 dsn
 // https://gorm.io/zh_CN/docs/connecting_to_the_database.html
-func formatDsn(conf config.DBConfig) (dsn string) {
+func formatDsn(conf types.DBConfig) (dsn string) {
 	// dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn += conf.Username + ":" + conf.Password
 	dsn += "@" + conf.Protocol + "(" + conf.Host + ":" + strconv.Itoa(conf.Port) + ")"

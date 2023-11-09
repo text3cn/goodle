@@ -2,7 +2,7 @@ package httpserver
 
 import (
 	"errors"
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
 	"net/http"
 	"strings"
 )
@@ -21,7 +21,7 @@ type Engine struct {
 	globalMiddlewares []MiddlewareHandler
 	groupMiddlewares  map[string][]MiddlewareHandler
 	requestHandler    RequestHandler
-	container         container.Container
+	container         core.Container
 	cross             bool
 }
 
@@ -33,7 +33,7 @@ type t3WebRoute struct {
 }
 
 // 初始化框架核心结构
-func (self *Engine) NewHttpEngine(serviceCenter container.Container) *Engine {
+func (self *Engine) NewHttpEngine(serviceCenter core.Container) *Engine {
 	// 路由 map 的第一维存请求方式，二维存控制器
 	router := map[string]map[string]t3WebRoute{}
 	router["GET"] = map[string]t3WebRoute{}
@@ -86,8 +86,9 @@ func Cross(response http.ResponseWriter) {
 
 // 框架核心结构实现 Handler 接口
 func (self *Engine) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	//self.container.NewSingle(logger.Name).(logger.Service).Trace("进入 core.serveHTTP")
-	//logger.Instance().Trace("Enter core.serveHTTP")
+	//self.container.NewSingle(goodlog.Name).(goodlog.Service).Trace("进入 core.serveHTTP")
+	//goodlog.Trace("Enter core.serveHTTP")
+
 	if self.cross {
 		Cross(response)
 	}
@@ -138,7 +139,3 @@ func (this *Engine) FindRouteHandler(request *http.Request) t3WebRoute {
 	}
 	return t3WebRoute{}
 }
-
-// 静态资源服务
-//fs := http.FileServer(http.Dir("/home/bob/static"))
-//http.Handle("/static/", http.StripPrefix("/static", fs))

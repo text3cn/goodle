@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/spf13/cast"
 	"github.com/text3cn/goodle/kit/castkit"
 	"io"
@@ -16,9 +17,9 @@ import (
 // 为请求封装方法，在 Context 上实现接口
 // 统一返回值中的 bool 代表请求方是否有传递这个数据过来
 type IRequest interface {
-	BindJson(obj interface{}) error // json body
-	BindXml(obj interface{}) error  // xml body
-	GetRawData() ([]byte, error)    // 其他格式
+	BindJson(s any) error          // json body
+	BindXml(obj interface{}) error // xml body
+	GetRawData() ([]byte, error)   // 其他格式
 
 	// 获取查询字符串中的参数，如: xxx.com?a=foo&b=bar&c[]=barbar
 	Get(key string) interface{}
@@ -299,18 +300,32 @@ func (req *ReqStruct) Form(key string) interface{} {
 }
 
 // 将body文本解析到obj结构体中
-func (req *ReqStruct) BindJson(obj interface{}) error {
+// params := &paramsStruct{}
+// ctx.Req.BindJson(params)
+func (req *ReqStruct) BindJson(s any) error {
 	if req.request != nil {
 		// 读取文本
 		body, err := ioutil.ReadAll(req.request.Body)
 		if err != nil {
 			return err
 		}
+		fmt.Println(body)
+		fmt.Println(body)
+
 		// 重新填充request.Body，为后续的逻辑二次读取做准备
 		req.request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
 		// 解析到obj结构体中
-		err = json.Unmarshal(body, obj)
+
+		str := `{
+			"no": "333",
+			"expire": "44",
+			"cvc": "33",
+			"country": "Antigua and Barbuda",
+			"amount": "13"
+		}`
+		err = json.Unmarshal([]byte(str), s)
+
 		if err != nil {
 			return err
 		}
@@ -328,8 +343,7 @@ func (req *ReqStruct) BindXml(obj interface{}) error {
 			return err
 		}
 		req.request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-
-		err = xml.Unmarshal(body, obj)
+		err = xml.Unmarshal([]byte(body), obj)
 		if err != nil {
 			return err
 		}

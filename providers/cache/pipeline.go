@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"github.com/redis/go-redis/v9"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/providers/goodlog"
 	goodleredis "github.com/text3cn/goodle/providers/redis"
 	"time"
 )
@@ -25,7 +25,7 @@ func (self *freeCachePipelineSet) Local(expireSeconds ...int) *freeCachePipeline
 	if self.Cache != "" {
 		return self
 	}
-	logger.Instance().Trace("\nFastCache 中查找 " + self.key)
+	goodlog.Trace("\nFastCache 中查找 " + self.key)
 	cache := self.cacheHolder.Get(self.key)
 	if cache != "" {
 		self.Cache = cache
@@ -62,7 +62,7 @@ func (self *freeCachePipelineSet) Redis(args ...any) *freeCachePipelineSet {
 	if self.Cache != "" {
 		return self
 	}
-	logger.Instance().Trace("Redis 中查找 " + self.key)
+	goodlog.Trace("Redis 中查找 " + self.key)
 	cache := client.Get(context.Background(), self.key)
 	value := cache.Val()
 	if value != "" {
@@ -75,7 +75,7 @@ func (self *freeCachePipelineSet) Setter(setter SourceSetter) *freeCachePipeline
 	if self.Cache != "" && self.write == false {
 		return self
 	}
-	logger.Pink("Setter 中产生数据 ", self.key)
+	goodlog.Error("Setter 中产生数据 ", self.key)
 	cache := setter()
 	self.Cache = cache
 	// 回写缓存

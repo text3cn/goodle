@@ -5,9 +5,9 @@ import (
 	"github.com/text3cn/goodle/providers/httpserver"
 )
 
-func Logger() httpserver.MiddlewareHandler {
+func goodlog() httpserver.MiddlewareHandler {
 	return func(c *httpserver.Context) error {
-		fmt.Println("Use logger middleware")
+		fmt.Println("Use goodlog middleware")
 		c.Next()
 		return nil
 	}

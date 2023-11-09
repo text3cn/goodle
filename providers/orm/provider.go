@@ -1,8 +1,8 @@
 package orm
 
 import (
-	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/goodlog"
 )
 
 const Name = "orm"
@@ -10,14 +10,14 @@ const Name = "orm"
 var instance *OrmService
 
 type OrmProvider struct {
-	container.ServiceProvider
+	core.ServiceProvider
 }
 
 func (self *OrmProvider) Name() string {
 	return Name
 }
 
-func (*OrmProvider) RegisterProviderInstance(c container.Container) container.NewInstanceFunc {
+func (*OrmProvider) RegisterProviderInstance(c core.Container) core.NewInstanceFunc {
 	return func(params ...interface{}) (interface{}, error) {
 		instance = &OrmService{c: c}
 		return instance, nil
@@ -28,11 +28,15 @@ func (*OrmProvider) InitOnBoot() bool {
 	return false
 }
 
-func (*OrmProvider) Params(c container.Container) []interface{} {
+func (*OrmProvider) Params(c core.Container) []interface{} {
 	return []interface{}{c}
 }
 
-func (*OrmProvider) BeforeInit(c container.Container) error {
-	logger.Instance().Trace("BeforeInit Orm Provider")
+func (*OrmProvider) BeforeInit(c core.Container) error {
+	goodlog.Trace("BeforeInit Orm Provider")
+	return nil
+}
+
+func (*OrmProvider) AfterInit(instance any) error {
 	return nil
 }

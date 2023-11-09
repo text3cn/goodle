@@ -3,22 +3,23 @@ package etcd
 import (
 	"context"
 	"fmt"
-	"github.com/text3cn/goodle/config"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/providers/config"
+	"github.com/text3cn/goodle/providers/goodlog"
+	"github.com/text3cn/goodle/types"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
 	"time"
 )
 
-func client() (*clientv3.Client, config.EtcdConfig) {
-	cfg := config.Instance().GetDiscovery()
+func client() (*clientv3.Client, types.EtcdConfig) {
+	cfg := config.Instance().GetEtcd()
 	// 创建 etcd 客户端连接
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   cfg.Server.Endpoints,
 		DialTimeout: time.Duration(cfg.Server.DialTimeoutSecods) * time.Second,
 	})
 	if err != nil {
-		logger.Pink("client() ERR:", err)
+		goodlog.Info("client() ERR:", err)
 	}
 	return cli, cfg
 }

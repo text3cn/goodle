@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
 )
 
 type Service interface {
@@ -12,5 +12,5 @@ type Service interface {
 
 type CacheService struct {
 	Service
-	holder container.Container
+	holder core.Container
 }

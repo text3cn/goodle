@@ -1,10 +1,10 @@
-package config
+package types
 
 import (
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
 )
 
-type BeforStartCallback func(c container.Container)
+type BeforStartCallback func(c core.Container)
 
 // DBConfig 代表数据库连接的所有配置
 type DBConfig struct {
@@ -61,4 +61,9 @@ type DiscoveryServer struct {
 type DiscoveryClient struct {
 	ServiceName string `mapstructure:"service_name"`
 	ServiceAddr string `mapstructure:"service_addr"`
+}
+
+// logger 配置
+type Goodlog struct {
+	Level string
 }

@@ -2,8 +2,8 @@
 package cache
 
 import (
-	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/goodlog"
 )
 
 const Name = "cache"
@@ -11,14 +11,14 @@ const Name = "cache"
 var instance *CacheService
 
 type CacheServiceProvider struct {
-	container.ServiceProvider
+	core.ServiceProvider
 }
 
 func (self *CacheServiceProvider) Name() string {
 	return Name
 }
 
-func (sp *CacheServiceProvider) RegisterProviderInstance(holder container.Container) container.NewInstanceFunc {
+func (sp *CacheServiceProvider) RegisterProviderInstance(holder core.Container) core.NewInstanceFunc {
 	return func(params ...interface{}) (interface{}, error) {
 		instance = &CacheService{holder: holder}
 		return instance, nil
@@ -29,12 +29,12 @@ func (*CacheServiceProvider) InitOnBoot() bool {
 	return false
 }
 
-func (sp *CacheServiceProvider) Params(c container.Container) []interface{} {
+func (sp *CacheServiceProvider) Params(c core.Container) []interface{} {
 	return []interface{}{c}
 }
 
-func (sp *CacheServiceProvider) BeforeInit(c container.Container) error {
-	logger.Instance().Trace("BeforeInit Cache Provider")
+func (sp *CacheServiceProvider) BeforeInit(c core.Container) error {
+	goodlog.Trace("BeforeInit Cache Provider")
 	return nil
 }
 

@@ -1,8 +1,8 @@
 package redis
 
 import (
-	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/goodlog"
 	"sync"
 )
 
@@ -23,14 +23,14 @@ var instance *RedisService
 //}
 
 type ReidsProvider struct {
-	container.ServiceProvider
+	core.ServiceProvider
 }
 
 func (self *ReidsProvider) Name() string {
 	return Name
 }
 
-func (*ReidsProvider) RegisterProviderInstance(c container.Container) container.NewInstanceFunc {
+func (*ReidsProvider) RegisterProviderInstance(c core.Container) core.NewInstanceFunc {
 	return func(params ...interface{}) (interface{}, error) {
 		instance = &RedisService{c: c, lock: sync.Mutex{}}
 		return instance, nil
@@ -41,12 +41,12 @@ func (*ReidsProvider) InitOnBoot() bool {
 	return false
 }
 
-func (*ReidsProvider) BeforeInit(c container.Container) error {
-	logger.Instance().Trace("BeforeInit Reids Provider")
+func (*ReidsProvider) BeforeInit(c core.Container) error {
+	goodlog.Trace("BeforeInit Reids Provider")
 	return nil
 }
 
-func (*ReidsProvider) Params(c container.Container) []interface{} {
+func (*ReidsProvider) Params(c core.Container) []interface{} {
 	return []interface{}{c}
 }
 

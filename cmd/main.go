@@ -1,20 +1,40 @@
 package main
 
 import (
-	"github.com/text3cn/goodle/engine"
-	"github.com/text3cn/goodle/providers/cache"
+	"github.com/text3cn/goodle/goodle"
+	"github.com/text3cn/goodle/providers/goodlog"
 	"github.com/text3cn/goodle/providers/httpserver"
 	"github.com/text3cn/goodle/providers/httpserver/middleware"
 )
 
 func main() {
 
-	// 存储桶容量，字节为单位，最小 32MB ，少于 32MB 会当做 32MB 处理
-	bucketSize := 32 * 1024 * 1024
-	cache.NewFreeCache("bucket1", bucketSize)
+	//go goodle.FileServer(8001, "./web")
 
-	// 启动 http 服务
-	engine.RunHttp(func(engine *httpserver.Engine) {
+	goodle.Init().RunHttp(func(engine *httpserver.Engine) {
+		engine.Get("/", Index, middleware.Recovery(map[string]interface{}{}))
+	}, ":3333")
+
+	output := map[string]interface{}{
+		"hello": "哈喽",
+		"world": "沃德",
+	}
+	goodlog.Errorf("output = %v", output)
+}
+
+// 启动 http 服务
+func http() {
+
+	goodlog.Trace("Trace 级别日志")
+	goodlog.Debug("Debug 级别日志")
+	goodlog.Info("Info 级别日志")
+	goodlog.Warn("Warn 级别日志")
+	goodlog.Error("Error 级别日志")
+	goodlog.Fatal("Fatal 级别日志")
+
+	goodlog.Redf("xxx %d xxx", 100)
+
+	goodle.Init().RunHttp(func(engine *httpserver.Engine) {
 
 		engine.Get("/", Index, middleware.Recovery(map[string]interface{}{}))
 
@@ -22,9 +42,10 @@ func main() {
 }
 
 func Index(ctx *httpserver.Context) {
+	goodlog.Trace("333")
 	ctx.Resp.Json(map[string]any{
 		"code":    0,
-		"message": "Hello",
+		"message": ctx.Config.Get("app.config1.config2").ToString(),
 	})
 }
 

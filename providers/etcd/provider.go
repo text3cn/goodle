@@ -1,8 +1,8 @@
 package etcd
 
 import (
-	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/goodlog"
 )
 
 const Name = "etcd"
@@ -10,14 +10,14 @@ const Name = "etcd"
 var etcdInstance *etcdService
 
 type ReidsProvider struct {
-	container.ServiceProvider
+	core.ServiceProvider
 }
 
 func (self *ReidsProvider) Name() string {
 	return Name
 }
 
-func (*ReidsProvider) RegisterProviderInstance(box container.Container) container.NewInstanceFunc {
+func (*ReidsProvider) RegisterProviderInstance(box core.Container) core.NewInstanceFunc {
 	return func(params ...interface{}) (interface{}, error) {
 		etcdInstance = &etcdService{c: box}
 		return etcdInstance, nil
@@ -28,12 +28,12 @@ func (*ReidsProvider) InitOnBoot() bool {
 	return false
 }
 
-func (*ReidsProvider) BeforeInit(c container.Container) error {
-	logger.Instance().Trace("BeforeInit Etcd Provider")
+func (*ReidsProvider) BeforeInit(c core.Container) error {
+	goodlog.Trace("BeforeInit Etcd Provider")
 	return nil
 }
 
-func (*ReidsProvider) Params(c container.Container) []interface{} {
+func (*ReidsProvider) Params(c core.Container) []interface{} {
 	return []interface{}{c}
 }
 

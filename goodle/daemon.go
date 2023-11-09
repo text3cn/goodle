@@ -1,11 +1,11 @@
-package engine
+package goodle
 
 import (
 	"github.com/sevlyar/go-daemon"
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
 	"github.com/text3cn/goodle/kit/filekit"
 	"github.com/text3cn/goodle/kit/strkit"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/providers/goodlog"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -15,7 +15,7 @@ import (
 // daemon 启动成功后父进程 return，子进程运行时脱离控制台，
 // 子进程向控制台打印日志时，会被定向到 /dev/null 所以控制台是没有输出的，
 // 因此需要将子进程的输出保存到文件中。
-func fork(c *container.ServicesContainer, command *Command, addr string, router HttpEngine) {
+func fork(c *core.ServicesContainer, command *Command, addr string, router HttpEngine) {
 	processName := strkit.StrReplace("./", "", os.Args[0], 1)
 	runtimePath := command.config.GetRuntimePath()
 	filekit.MkDir(runtimePath, 0777)
@@ -77,14 +77,14 @@ func stop(command *Command) {
 	runtimePath := command.config.GetRuntimePath()
 	pidfile := filepath.Join(runtimePath, processName+".pid")
 	if pid, err = daemon.ReadPidFile(pidfile); err != nil {
-		logger.Instance().Error("pid not found")
+		goodlog.Error("pid not found")
 		return
 	}
 	process, err = os.FindProcess(pid)    // 通过 pid 获取子进程
 	err = process.Signal(syscall.SIGTERM) // 给子进程发送中断信号
 	if err != nil {
-		logger.Instance().Error("Stop daemon fail" + err.Error())
+		goodlog.Error("Stop daemon fail" + err.Error())
 	} else {
-		logger.Instance().Trace("Stop daemon success")
+		goodlog.Trace("Stop daemon success")
 	}
 }

@@ -1,1 +1,13 @@
 debug: true
+
+goodlog:
+  level: trace
+
+# 按时无用
+runtime:
+  path: ./videobiz_runtime
+
+swagger:
+  filepath: docs/swagger.json
+  host: localhost
+  port: 4545

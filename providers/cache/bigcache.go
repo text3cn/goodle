@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"github.com/allegro/bigcache/v3"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/providers/goodlog"
 	"time"
 )
 
@@ -31,7 +31,7 @@ func NewBigCache(bucketName string, expireSeconds int) {
 func NewBigCacheWithConfig(bucketName string, config bigcache.Config) {
 	cache, initErr := bigcache.New(context.Background(), config)
 	if initErr != nil {
-		logger.Instance().Error(initErr)
+		goodlog.Error(initErr)
 		return
 	}
 	bigCacheInstance.buckets[bucketName] = &bigCacheHolder{cache}
@@ -59,7 +59,7 @@ func (self *bigCacheHolder) Delete(key string) bool {
 	err := self.BigCache.Delete(key)
 	self.BigCache.Len()
 	if err != nil {
-		logger.Instance().Error(err.Error())
+		goodlog.Error(err.Error())
 		return false
 	}
 	return true

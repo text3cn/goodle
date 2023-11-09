@@ -1,4 +1,4 @@
-package engine
+package goodle
 
 import (
 	"fmt"

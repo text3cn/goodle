@@ -2,9 +2,9 @@ package orm
 
 import (
 	"database/sql"
-	goodleconfig "github.com/text3cn/goodle/config"
-	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/config"
+	"github.com/text3cn/goodle/providers/goodlog"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -18,17 +18,17 @@ type Service interface {
 
 type OrmService struct {
 	Service
-	c   container.Container
+	c   core.Container
 	dbs map[string]*gorm.DB // key 为 dsn, value 为 gorm.DB（连接池）
 
 }
 
 // 如果能获取到配置文件则进行数据库连接，这个目前在 engine/run.go -> initServices() 中直接实例化了
 func (self *OrmService) Init() {
-	configService := goodleconfig.Instance()
+	configService := self.c.NewSingle(core.Config).(config.Service)
 	dbsCfg := configService.GetDatabase()
 	if dbsCfg == nil {
-		logger.Pink("database config error")
+		goodlog.Error("database config error")
 		return
 	}
 	for k, config := range dbsCfg {
@@ -59,7 +59,7 @@ func (self *OrmService) Init() {
 		if config.ConnMaxLifetime != "" {
 			liftTime, err := time.ParseDuration(config.ConnMaxLifetime)
 			if err != nil {
-				logger.Pink("conn max lift time error", map[string]interface{}{"err": err})
+				goodlog.Error("conn max lift time error", map[string]interface{}{"err": err})
 			} else {
 				sqlDB.SetConnMaxLifetime(liftTime)
 			}
@@ -67,7 +67,7 @@ func (self *OrmService) Init() {
 		if config.ConnMaxIdletime != "" {
 			idleTime, err := time.ParseDuration(config.ConnMaxIdletime)
 			if err != nil {
-				logger.Pink("conn max idle time error", map[string]interface{}{"err": err})
+				goodlog.Error("conn max idle time error", map[string]interface{}{"err": err})
 			} else {
 				sqlDB.SetConnMaxIdleTime(idleTime)
 			}

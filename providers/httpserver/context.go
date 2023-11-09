@@ -2,10 +2,10 @@ package httpserver
 
 import (
 	"context"
-	"github.com/text3cn/goodle/config"
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
 	"github.com/text3cn/goodle/kit/castkit"
 	"github.com/text3cn/goodle/providers/cache"
+	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/redis"
 	"net/http"
 	"sync"
@@ -31,7 +31,7 @@ type Context struct {
 	//    先读取标记位，如果为 true，表示已经给客户端返回过了，就不要再写 response 了。
 	hasTimeout bool
 	// 服务中心
-	container container.Container
+	container core.Container
 	values    map[string]interface{}
 
 	// 配置服务
@@ -42,7 +42,7 @@ type Context struct {
 	Redis  redis.Service
 }
 
-func NewContext(r *http.Request, w http.ResponseWriter, holder container.Container) *Context {
+func NewContext(r *http.Request, w http.ResponseWriter, holder core.Container) *Context {
 	req := &ReqStruct{request: r}
 	ctx := &Context{
 		context:        r.Context(),
@@ -53,7 +53,7 @@ func NewContext(r *http.Request, w http.ResponseWriter, holder container.Contain
 
 		Req:    req,
 		Resp:   RespStruct{request: req, responseWriter: w},
-		Config: config.Instance(),
+		Config: holder.NewSingle(core.Config).(config.Service),
 		Cache:  holder.NewSingle(cache.Name).(cache.Service),
 		Redis:  holder.NewSingle(redis.Name).(redis.Service),
 	}
@@ -61,7 +61,7 @@ func NewContext(r *http.Request, w http.ResponseWriter, holder container.Contain
 }
 
 // 对用户暴露服务者中心
-func (ctx *Context) Holder() container.Container {
+func (ctx *Context) Holder() core.Container {
 	return ctx.container
 }
 

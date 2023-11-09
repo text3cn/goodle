@@ -2,8 +2,8 @@ package redis
 
 import (
 	"github.com/redis/go-redis/v9"
-	"github.com/text3cn/goodle/config"
-	"github.com/text3cn/goodle/container"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/config"
 	"sync"
 )
 
@@ -15,7 +15,7 @@ type Service interface {
 
 type RedisService struct {
 	Service
-	c    container.Container
+	c    core.Container
 	dbs  map[string]*redis.Client
 	lock sync.Mutex
 }
@@ -24,7 +24,7 @@ type RedisService struct {
 func (self *RedisService) init() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	configService := config.Instance()
+	configService := self.c.NewSingle(core.Config).(config.Service)
 	redisConfigs := configService.GetRedis()
 	var isFirst = true
 	for connName, config := range redisConfigs {

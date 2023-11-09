@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cast"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/providers/goodlog"
 )
 
 type pipeline struct {
@@ -42,7 +42,7 @@ func (self *pipeline) Redis(args ...any) *pipeline {
 		if e, ok := args[0].(int); ok {
 			expire = e
 		} else {
-			logger.Instance().Error("Expire sencods " + cast.ToString(args[0]) + " is not a valid value.")
+			goodlog.Error("Expire sencods " + cast.ToString(args[0]) + " is not a valid value.")
 			return self
 		}
 		client = instance.Conn()
@@ -60,7 +60,7 @@ func (self *pipeline) Redis(args ...any) *pipeline {
 	if self.Cache != "" {
 		return self
 	}
-	logger.Instance().Trace("Redis " + connName + " 中查找 " + self.key)
+	goodlog.Trace("Redis " + connName + " 中查找 " + self.key)
 	cache := client.Get(context.Background(), self.key)
 	value := cache.Val()
 	if value != "" {

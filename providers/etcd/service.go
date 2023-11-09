@@ -3,8 +3,8 @@ package etcd
 import (
 	"context"
 	"fmt"
-	"github.com/text3cn/goodle/container"
-	"github.com/text3cn/goodle/providers/logger"
+	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/goodlog"
 	"github.com/text3cn/goodle/types"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
@@ -15,7 +15,7 @@ type Service interface {
 
 type etcdService struct {
 	Service
-	c container.Container
+	c core.Container
 }
 
 func Instance() *etcdService {
@@ -32,7 +32,7 @@ func (self *etcdService) ServiceRegister() {
 	// 分配租约时间为 10 秒
 	leaseResp, err := cli.Grant(ctx, 10)
 	if err != nil {
-		logger.Pink(leaseResp.Error)
+		goodlog.Pink(leaseResp.Error)
 	}
 
 	serviceName := cfg.Client.ServiceName
@@ -42,13 +42,13 @@ func (self *etcdService) ServiceRegister() {
 	key := fmt.Sprintf("/services/%s", serviceName)
 	_, err = cli.Put(ctx, key, serviceAddr, clientv3.WithLease(leaseResp.ID))
 	if err != nil {
-		logger.Instance().Error(err)
+		goodlog.Error(err)
 	}
 
 	// 启动心跳每 5 秒续约一次
 	go sendHeartbeats(context.TODO(), cli, leaseResp.ID, 5)
 
-	logger.Instance().Trace("注册服务 " + serviceName + " 到 etcd 成功")
+	goodlog.Trace("注册服务 " + serviceName + " 到 etcd 成功")
 }
 
 // 服务下线
@@ -64,10 +64,10 @@ func (self *etcdService) ServiceOffline() {
 
 	_, err := cli.Delete(ctx, key)
 	if err != nil {
-		logger.Instance().Error(err)
+		goodlog.Error(err)
 	}
 
-	logger.Pink("服务 " + cfg.Client.ServiceName + " 已下线并从 etcd 中注销")
+	goodlog.Pink("服务 " + cfg.Client.ServiceName + " 已下线并从 etcd 中注销")
 }
 
 // 发现服务
@@ -85,7 +85,7 @@ func (self *etcdService) ServiceDiscovery(serviceName string, callback func(serv
 			fmt.Println("发现服务 "+serviceName+" 地址列表为 ", services)
 			callback(services.List)
 			if len(services.List) == 0 {
-				logger.Pink("none services " + serviceName)
+				goodlog.Pink("none services " + serviceName)
 			}
 		}
 		token = _token
@@ -95,14 +95,21 @@ func (self *etcdService) ServiceDiscovery(serviceName string, callback func(serv
 	discoverService(cli, serviceName)
 
 	// 启动协程不停地去发现服务
-	ticker := time.NewTicker(time.Duration(cfg.DiscoveryIntervalSeconds) * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			discoverService(cli, serviceName)
+	go func() {
+		ticker := time.NewTicker(time.Duration(cfg.DiscoveryIntervalSeconds) * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				discoverService(cli, serviceName)
+			}
 		}
-	}
+		defer func() {
+			if err := recover(); err != nil {
+				goodlog.Error(err)
+			}
+		}()
+	}()
 }
 
 // 根据服务名称列出所有服务
@@ -119,7 +126,7 @@ func (self *etcdService) GetServices(serviceName string) (ret types.GetServicesD
 	servicePrefix := "/services/" + serviceName
 	resp, err := cli.Get(ctx, servicePrefix, clientv3.WithPrefix())
 	if err != nil {
-		logger.Pink(err.Error())
+		goodlog.Pink(err.Error())
 	}
 	list := []string{}
 	for _, kv := range resp.Kvs {
@@ -142,7 +149,7 @@ func (self *etcdService) ServicesList() (ret map[string][]string) {
 	servicePrefix := "/services/"
 	resp, err := cli.Get(ctx, servicePrefix, clientv3.WithPrefix())
 	if err != nil {
-		logger.Pink(err.Error())
+		goodlog.Pink(err.Error())
 	}
 	ret = make(map[string][]string)
 	for _, kv := range resp.Kvs {
