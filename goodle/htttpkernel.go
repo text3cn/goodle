@@ -2,12 +2,13 @@ package goodle
 
 import (
 	"fmt"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra" // https://github.com/spf13/cobra
 	"github.com/text3cn/goodle/core"
 	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/goodlog"
 	"github.com/text3cn/goodle/providers/httpserver"
-	"log"
+	"github.com/text3cn/goodle/types"
 	"net/http"
 )
 
@@ -117,11 +118,25 @@ func startHttpServer(c *core.ServicesContainer, addr string, router HttpEngine) 
 		// 请求监听地址
 		Addr: addr,
 	}
-	goodlog.Trace("Server Listen On " + addr)
-
+	httpServerOutput(cfgsvc, addr)
 	err := server.ListenAndServe()
 	if err != nil {
-		log.Println("[Start http fail]", err)
+		goodlog.Error("[Start http fail]", err)
+	}
+}
+
+func httpServerOutput(cfgsvc config.Service, addr string) {
+	// web server
+	info := fmt.Sprintf("\033[36m%s"+"\033[0m", "WebServer: http://localhost"+addr)
+	fmt.Println("")
+	fmt.Println(info)
+	// swager server
+	swagCfg := cfgsvc.GetSwagger()
+	if swagCfg != (types.SwaggerConfig{}) {
+		str := "SwaggerUI: http://" + swagCfg.SwaggerUiHost + ":" + cast.ToString(swagCfg.SwaggerUiPort) +
+			"/swagger-ui/index.html"
+		info = fmt.Sprintf("\033[36m%s"+"\033[0m", str)
+		fmt.Println(info)
 	}
 }
 

@@ -8,7 +8,8 @@ type BeforStartCallback func(c core.Container)
 
 // DBConfig 代表数据库连接的所有配置
 type DBConfig struct {
-	Debug bool `mapstructure:"debug"`
+	Debug       bool   `mapstructure:"debug"`
+	DefaultConn string `mapstructure:"default_conn"`
 	// 以下配置关于 dsn
 	WriteTimeout string `mapstructure:"write_timeout"` // 写超时时间
 	Loc          string `mapstructure:"loc"`           // 时区

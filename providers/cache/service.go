@@ -5,9 +5,9 @@ import (
 )
 
 type Service interface {
-	FreeCache(string) *freeCacheHolder
-	BigCache(string) *bigCacheHolder
-	FastCache(string) *fastCacheHolder
+	FreeCache(string) *FreeCacheHolder
+	BigCache(string) *BigCacheHolder
+	FastCache(string) *FastCacheHolder
 }
 
 type CacheService struct {

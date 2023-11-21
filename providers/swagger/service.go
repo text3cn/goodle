@@ -21,20 +21,16 @@ type SwaggerService struct {
 func (self *SwaggerService) Init() {
 	configService := self.c.NewSingle(core.Config).(config.Service)
 	cfg := configService.GetSwagger()
-	port := cast.ToString(cfg.SwaggerUiPort)
-
+	port := ":" + cast.ToString(cfg.SwaggerUiPort)
 	r := chi.NewRouter()
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://"+cfg.SwaggerUiHost+":"+port+"/swagger"),
+	// 静态资源服务提供文档文件
+	r.HandleFunc("/swagger-doc", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, cfg.FilePath)
+	})
+	//go http.ListenAndServe(port, r)
+	// 加载文档
+	r.Get("/swagger-ui/*", httpSwagger.Handler(
+		httpSwagger.URL("http://"+cfg.SwaggerUiHost+port+"/swagger-doc"),
 	))
-
-	go http.ListenAndServe(":"+port, r)
-
-	//http.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-	//	http.ServeFile(w, r, cfg.FilePath)
-	//})
-	//http.HandleFunc("/s", httpSwagger.Handler(
-	//	httpSwagger.URL("http://"+cfg.SwaggerUiHost+":"+port+"/swagger"),
-	//))
-	//go http.ListenAndServe(":"+port, nil)
+	go http.ListenAndServe(port, r)
 }

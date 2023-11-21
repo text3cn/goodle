@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (self *freeCacheHolder) Pipeline(key string, write ...bool) *freeCachePipelineSet {
+func (self *FreeCacheHolder) Pipeline(key string, write ...bool) *freeCachePipelineSet {
 	w := false
 	if len(write) > 0 {
 		w = true

@@ -92,14 +92,14 @@ func (res *RespStruct) Html(file string, obj interface{}) IResponse {
 		return res
 	}
 
-	res.SetHeader("Content-Type", "application/html")
+	res.SetHeader("Content-Type", "text/html")
 	return res
 }
 
 // string
 func (res *RespStruct) Text(format string, values ...interface{}) IResponse {
 	out := fmt.Sprintf(format, values...)
-	res.SetHeader("Content-Type", "application/text")
+	res.SetHeader("Content-Type", "text/plain")
 	res.responseWriter.Write([]byte(out))
 	return res
 }

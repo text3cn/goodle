@@ -3,6 +3,7 @@ package orm
 import (
 	"github.com/spf13/cast"
 	"github.com/text3cn/goodle/core"
+	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/types"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -18,7 +19,12 @@ func GetDB(c core.Container, connName ...string) *gorm.DB {
 		ormService := c.NewSingle(Name).(Service)
 		ormService.Init()
 	}
-	key := "default"
+	var key string
+	cfg := config.Instance().GetDatabase()
+	for _, v := range cfg {
+		key = v.DefaultConn
+		break
+	}
 	if len(connName) > 0 {
 		key = connName[0]
 	}
