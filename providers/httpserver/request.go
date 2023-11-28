@@ -16,18 +16,18 @@ import (
 // 为请求封装方法，在 Context 上实现接口
 // 统一返回值中的 bool 代表请求方是否有传递这个数据过来
 type IRequest interface {
-	ScanJson(s any) error          // json body
+	JsonScan(s any) error          // json body
 	BindXml(obj interface{}) error // xml body
 	GetRawData() ([]byte, error)   // 其他格式
 
 	// 获取查询字符串中的参数，如: xxx.com?a=foo&b=bar&c[]=barbar
 	Get(key string) interface{}
-	GetInt(key string, defaultValue ...int) (int, bool)
+	GetInt(key string, defaultValue ...int) int
 	GetInt64(key string, defaultValue ...int64) (int64, bool)
 	GetFloat64(key string, defaultValue ...float64) (float64, bool)
 	GetFloat32(key string, defaultValue ...float32) (float32, bool)
 	GetBool(key string, defaultValue ...bool) (bool, bool)
-	GetString(key string, defaultValue ...string) (string, bool)
+	GetString(key string, defaultValue ...string) string
 	GetStringSlice(key string, defaultValue ...[]string) ([]string, bool)
 
 	// Post、Put
@@ -82,17 +82,17 @@ func (req *ReqStruct) Get(key string) interface{} {
 	return nil
 }
 
-func (req *ReqStruct) GetInt(key string, defaultValue ...int) (int, bool) {
+func (req *ReqStruct) GetInt(key string, defaultValue ...int) int {
 	params := req.QueryAll()
 	if vals, ok := params[key]; ok {
 		if len(vals) > 0 {
-			return cast.ToInt(vals[0]), true
+			return cast.ToInt(vals[0])
 		}
 	}
 	if len(defaultValue) > 0 {
-		return defaultValue[0], false
+		return defaultValue[0]
 	}
-	return 0, false
+	return 0
 }
 
 func (req *ReqStruct) GetInt64(key string, defaultValue ...int64) (int64, bool) {
@@ -147,17 +147,17 @@ func (req *ReqStruct) GetBool(key string, defaultValue ...bool) (bool, bool) {
 	return false, false
 }
 
-func (req *ReqStruct) GetString(key string, defaultValue ...string) (string, bool) {
+func (req *ReqStruct) GetString(key string, defaultValue ...string) string {
 	params := req.QueryAll()
 	if vals, ok := params[key]; ok {
 		if len(vals) > 0 {
-			return vals[0], true
+			return vals[0]
 		}
 	}
 	if len(defaultValue) > 0 {
-		return defaultValue[0], false
+		return defaultValue[0]
 	}
-	return "", false
+	return ""
 }
 
 // 请求 /xxx?a=11&a=22 中的参数 a 是能组成数组的
@@ -301,7 +301,7 @@ func (req *ReqStruct) Form(key string) interface{} {
 // 将body文本解析到obj结构体中
 // params := &paramsStruct{}
 // ctx.Req.BindJson(params)
-func (req *ReqStruct) ScanJson(s any) error {
+func (req *ReqStruct) JsonScan(s any) error {
 	if req.request != nil {
 		// 读取文本
 		body, err := ioutil.ReadAll(req.request.Body)

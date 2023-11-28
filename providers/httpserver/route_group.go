@@ -1,7 +1,9 @@
 // 分组路由注册
 package httpserver
 
-import "strings"
+import (
+	"strings"
+)
 
 // IGroup 路由分组接口
 type IGroup interface {

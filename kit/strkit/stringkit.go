@@ -183,16 +183,21 @@ func GetSuffix(fileName string) string {
 	return last
 }
 
-// 序列化成json
-func JsonEncode(val interface{}) []byte {
+// 序列化成 JSON
+func JsonEncode(val interface{}) string {
 	json, err := json.Marshal(val)
 	if err != nil {
 		fmt.Println("Json encode error")
 	}
-	return json
+	return string(json)
 }
 
-// JSON反序列化
+// JSON 反序列化
+// example: strkit.JsonDecode(jsonStr, &v)
+func JsonDecode(jsonString string, v any) error {
+	return json.Unmarshal([]byte(jsonString), v)
+}
+
 func Json_decode_map(str string) (thisMap map[string]interface{}, err error) {
 	if err = json.Unmarshal([]byte(str), &thisMap); err != nil {
 		fmt.Printf("Json反序列化为Map出错: %s\n", err.Error())
@@ -713,5 +718,3 @@ func EndWith(str, suffix string) bool {
 func StrRepeat(input string, multiplier int) string {
 	return strings.Repeat(input, multiplier)
 }
-
-

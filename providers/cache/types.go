@@ -13,7 +13,7 @@ type redisConfig struct {
 }
 
 type freeCachePipelineSet struct {
-	Cache        string
+	Data         string
 	write        bool
 	cacheHolder  *FreeCacheHolder
 	key          string
@@ -27,6 +27,15 @@ type fastCachePipelineSet struct {
 	Cache        string
 	write        bool
 	cacheHolder  *FastCacheHolder
+	key          string
+	widthLocal   bool
+	redisClients []redisConfig
+}
+
+type bigCachePipelineSet struct {
+	Data         string
+	write        bool
+	cacheHolder  *BigCacheHolder
 	key          string
 	widthLocal   bool
 	redisClients []redisConfig

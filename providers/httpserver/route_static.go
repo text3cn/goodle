@@ -6,6 +6,7 @@ func (this *Engine) Get(url string, handler RequestHandler, middlewares ...Middl
 }
 
 func (this *Engine) Post(url string, handler RequestHandler, middlewares ...MiddlewareHandler) {
+
 	this.AddRoute("POST", "", url, routeTypeGoStatic, handler, middlewares...)
 }
 

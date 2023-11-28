@@ -31,6 +31,7 @@ func (*Goodle) RunHttp(router HttpEngine, addr ...string) {
 
 	startHttpServer(c, ADDR, router)
 
+	// 容器化运行不需要命令行，将命令行迁移到 good 工具中，通过 good 启动
 	//var cobraRoot = &cobra.Command{
 	//	// 定义根命令的关键字
 	//	Use: "./main",

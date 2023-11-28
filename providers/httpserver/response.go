@@ -37,7 +37,7 @@ func (res *RespStruct) Json(obj interface{}) IResponse {
 // Jsonp输出
 func (res *RespStruct) Jsonp(obj interface{}) IResponse {
 	// 获取请求参数callback
-	callbackFunc, _ := res.request.GetString("callback", "callback_function")
+	callbackFunc := res.request.GetString("callback", "callback_function")
 	res.SetHeader("Content-Type", "application/javascript")
 	// 输出到前端页面的时候需要注意下进行字符过滤，否则有可能造成xss攻击
 	callback := template.JSEscapeString(callbackFunc)
@@ -69,7 +69,7 @@ func (res *RespStruct) Jsonp(obj interface{}) IResponse {
 	return res
 }
 
-//xml输出
+// xml输出
 func (res *RespStruct) Xml(obj interface{}) IResponse {
 	byt, err := xml.Marshal(obj)
 	if err != nil {

@@ -47,3 +47,5 @@ func (self *FastCacheHolder) Delete(key string) {
 func (self *FastCacheHolder) Clear() {
 	self.Cache.Reset()
 }
+
+/* fastcache 没有过期时间，所以没有支持 Pipeline */

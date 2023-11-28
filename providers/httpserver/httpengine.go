@@ -13,7 +13,7 @@ const (
 )
 
 type MiddlewareHandler func(c *Context) error
-type RequestHandler func(c *Context) // 控制器函数
+type RequestHandler func(c *Context) // API / 控制器函数
 
 // 框架核心结构体
 type Engine struct {
@@ -122,6 +122,7 @@ func (self *Engine) ServeHTTP(response http.ResponseWriter, request *http.Reques
 		ctx.Resp.SetStatus(500).Text(err.Error())
 		return
 	}
+
 	// 执行控制器函数
 	route.requestHandler(ctx)
 }

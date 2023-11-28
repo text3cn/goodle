@@ -1,8 +1,10 @@
 package arrkit
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 // 从 string 数组中删除一个指定值，返回删除后的新数组
@@ -58,4 +60,13 @@ func IntArrayDesc(arr []int) (ret []int) {
 		ret = append(ret, arr[i])
 	}
 	return ret
+}
+
+// 数组转逗号拼接
+func JoinWithCommas(numbers []int) string {
+	var strNumbers []string
+	for _, num := range numbers {
+		strNumbers = append(strNumbers, fmt.Sprint(num))
+	}
+	return strings.Join(strNumbers, ",")
 }

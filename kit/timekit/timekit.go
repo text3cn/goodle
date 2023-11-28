@@ -3,20 +3,27 @@ package timekit
 import (
 	"fmt"
 	"github.com/spf13/cast"
+	"github.com/text3cn/goodle/providers/goodlog"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
-var tz = "Asia/Shanghai"
+var TimeZone = "Asia/Shanghai"
+
+// 转 time.Time 类型时会自动使用 UTC 时间，比北京时间晚 8 小时，
+// FixedZone 基于服务器所在时区进行时区偏移
+var FixedZone = 3600 * 8
 
 // 获取指定时区的当前时间字符串，可直接存入 mysql datetime
 // args[0] 时区，如：Asia/Ho_Chi_Minh
 func NowDatetimeStr(args ...string) string {
 	var timezone *time.Location
 	if len(args) > 0 {
-		tz = args[0]
+		TimeZone = args[0]
 	}
-	timezone, _ = time.LoadLocation(tz)
+	timezone, _ = time.LoadLocation(TimeZone)
 	t := time.Now().In(timezone).Format("2006-01-02 15:04:05")
 	return cast.ToString(t)
 }
@@ -61,7 +68,7 @@ func Checkdate(month, day, year int) bool {
 }
 
 func DatetimeStr() string {
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	int64 := time.Now().In(timezone).Unix()
 	timestamp := time.Unix(int64, 0).Format("2006-01-02 15:04:05")
 	return timestamp
@@ -70,7 +77,7 @@ func DatetimeStr() string {
 // args[0] 往前或往后推几天，昨天传 -1
 func DateStr(args ...int64) string {
 	var timestamp int64
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	timestamp = time.Now().In(timezone).Unix()
 	if len(args) > 0 {
 		timestamp += args[0] * (3600 * 24)
@@ -81,7 +88,7 @@ func DateStr(args ...int64) string {
 
 // 获取年月，格式：2202（2022年2月）
 func YearMonthShortStr() string {
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	int64 := time.Now().In(timezone).Unix()
 	timestamp := time.Unix(int64, 0).Format("0601")
 	return timestamp
@@ -89,7 +96,7 @@ func YearMonthShortStr() string {
 
 // 获取当前时间的 mysq datetime 格式 （ 2006-01-02 15:04:05 ）
 func Datetime() string {
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	int64 := time.Now().In(timezone).Unix()
 	timestamp := time.Unix(int64, 0).Format("2006-01-02 15:04:05")
 	return timestamp
@@ -112,7 +119,7 @@ func TodayEndTime() int64 {
 // 获取微秒时间戳
 func Microtime(args ...string) int {
 	//return int(time.Now().UnixNano())
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	tz := timezone
 	if len(args) > 0 {
 		tz, _ = time.LoadLocation("Asia/Ho_Chi_Minh")
@@ -133,7 +140,7 @@ func Millisecond() int {
 
 // 获取今天零点的时间戳
 func TodayTime() int {
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	timeStamp := time.Now().In(timezone)
 	newTime := time.Date(timeStamp.Year(), timeStamp.Month(), timeStamp.Day(), 0, 0, 0, 0, timeStamp.Location())
 	return int(newTime.Unix())
@@ -160,7 +167,7 @@ func DateTodayInt() (int, int, int) {
 
 // 获取今天日期字符串，格式 2021-11-03
 func DateTodayStr() string {
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	int64 := time.Now().In(timezone).Unix()
 	str := time.Unix(int64, 0).Format("2006-01-02")
 	return str
@@ -168,7 +175,7 @@ func DateTodayStr() string {
 
 // 今天日期字符串，格式 220105
 func DateTodayShortStr() string {
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	int64 := time.Now().In(timezone).Unix()
 	str := time.Unix(int64, 0).Format("060102")
 	return str
@@ -189,7 +196,7 @@ func TimeStampString(addtime ...int) string {
 	if len(addtime) > 0 {
 		add = addtime[0]
 	}
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	return strconv.FormatInt(time.Now().In(timezone).Unix()+int64(add), 10)
 }
 
@@ -204,7 +211,7 @@ func WeekTime() int {
 		"Friday":    5,
 		"Saturday":  6,
 	}
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	timeStamp := time.Now().In(timezone)
 	weekStr := timeStamp.Weekday().String()
 	weekInt := week[weekStr]
@@ -220,7 +227,7 @@ func Strtotime(format, strtime string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	timezone, _ := time.LoadLocation(tz)
+	timezone, _ := time.LoadLocation(TimeZone)
 	return t.In(timezone).Unix(), nil
 }
 
@@ -259,11 +266,19 @@ func TimestampToDate(tiemstamp int64) string {
 	return Date("2006-01-02", tiemstamp)
 }
 
-// 字符串时间转 time.Time
-func Str2datetime() time.Time {
-	Strtotime("02/01/2006 15:04:05", "02/01/2016 15:04:05")
-	todayZero, _ := time.ParseInLocation("2006-01-02", "2019-01-01 15:22:22", time.Local)
-	return todayZero
+// 2019-01-01 15:22:22 格式字符串转 time.Time
+func Str2time(strtime string) (parsedTime time.Time) {
+	// 定义日期时间格式
+	dateTimeFormat := "2006-01-02 15:04:05"
+	// 调整时差
+	local := time.FixedZone("Local", FixedZone)
+	// 将字符串解析为 time.Time 类型
+	var err error
+	parsedTime, err = time.ParseInLocation(dateTimeFormat, strtime, local)
+	if err != nil {
+		goodlog.Error("Error:", err)
+	}
+	return
 }
 
 // 传入字符串日期，加或减去 n 天
@@ -276,4 +291,24 @@ func DateStrAddDay(date string, n int) string {
 	}
 	timestamp += int64((3600 * 24) * n)
 	return TimestampToDate(timestamp)
+}
+
+// 将 2023-11-27T21:10:10+07:00 转 2023-11-27 21:10:10 形式
+// 直接通过字符串截取形式完成，不管时区
+func Time2Str(t time.Time) string {
+	timeString := cast.ToString(t)
+	re := regexp.MustCompile(`(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})`)
+	matches := re.FindStringSubmatch(timeString)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return timeString
+}
+
+// 将 2023-11-27T21:10:10+07:00 转 2023-11-27 21:10:10 形式
+// 直接通过字符串截取形式完成，不管时区
+func TimeStr2Str(timeString string) string {
+	timeString = strings.Replace(timeString, "T", " ", 1)
+	seg := strings.Split(timeString, "+")
+	return seg[0]
 }
