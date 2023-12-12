@@ -1,5 +1,3 @@
-<img src='./logo.png' width='100px' height='100px'/>
-
 ## Goodle
 Easy to use, high-performance modern Go language development framework.
  
