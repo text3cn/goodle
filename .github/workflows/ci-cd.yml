@@ -1,0 +1,14 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: centos-8
+
+    steps:
+      - name: finish
+        uses: echo "finished."
