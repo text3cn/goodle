@@ -1,4 +1,4 @@
-package convkit
+package typekit
 
 import (
 	"encoding/json"

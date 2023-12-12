@@ -5,7 +5,7 @@
 // other structs, etc. and the decoder will properly decode nested
 // maps and so on into the proper structures in the native SafeGo struct.
 // See the examples to see what the decoder is capable of.
-package mapkit
+package typekit
 
 import (
 	"errors"

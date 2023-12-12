@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"runtime/debug"
 )
 
 // 执行系统命令，并且返回执行的命令和执行结果
@@ -34,4 +36,15 @@ func ExecSysCmd(commandName string, params []string) (string, string) {
 		commandStr += " " + v
 	}
 	return commandStr, strings
+}
+
+// 获取当前进程 ID
+func Getpid() int {
+	return os.Getpid()
+}
+
+// 获取调用栈
+func GetStack() string {
+	// 打印： debug.PrintStack()
+	return string(debug.Stack())
 }
