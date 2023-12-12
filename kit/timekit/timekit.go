@@ -312,3 +312,8 @@ func TimeStr2Str(timeString string) string {
 	seg := strings.Split(timeString, "+")
 	return seg[0]
 }
+
+func Time2stamp(t time.Time) int64 {
+	unixTimestampMillis := t.UnixNano() / int64(time.Millisecond)
+	return unixTimestampMillis
+}

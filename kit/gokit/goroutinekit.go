@@ -1,4 +1,4 @@
-package goroutinekit
+package gokit
 
 import (
 	"bytes"

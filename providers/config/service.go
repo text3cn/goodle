@@ -76,7 +76,7 @@ func (self *ConfigService) LoadConfig(filename string) (*viper.Viper, error) {
 	// 没有配置文件
 	if config == nil && localConfig == nil {
 		err := errors.New("Unable to find configuration file " + filename +
-			". The configuration file should be placed in any of the following paths:\n " +
+			".\nThe configuration file should be placed in any of the following paths:\n " +
 			self.currentPath + filename + "\n" +
 			self.currentPath + "config/" + filename + "\n" +
 			self.currentPath + "config/local/" + filename + "\n",

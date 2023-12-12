@@ -10,17 +10,14 @@ const Name = "redis"
 
 var instance *RedisService
 
-//func Instance(c container.ServicesContainer, name ...string) *redis.Client {
-//	if instance == nil {
-//		redisService := c.NewSingle(Name).(Service)
-//		redisService.init()
-//	}
-//	key := "first"
-//	if len(name) > 0 {
-//		key = name[0]
-//	}
-//	return instance.dbs[key]
-//}
+func Instance() *RedisService {
+	if instance == nil {
+		redisService := core.FrameContainer().NewSingle(Name).(*RedisService)
+		redisService.init()
+		return redisService
+	}
+	return instance
+}
 
 type ReidsProvider struct {
 	core.ServiceProvider

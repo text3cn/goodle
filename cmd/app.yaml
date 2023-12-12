@@ -1,13 +1,13 @@
-debug: true
+debug: true # 框架中通过 cfgSvc.IsDebug() 获取
 
 goodlog:
   level: trace
 
-# 按时无用
 runtime:
-  path: ./videobiz_runtime
+  path: ./runtime_dir
 
 swagger:
   filepath: docs/swagger.json
   host: localhost
   port: 4545
+

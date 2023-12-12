@@ -6,7 +6,7 @@ import (
 	"github.com/text3cn/goodle/kit/castkit"
 	"github.com/text3cn/goodle/providers/cache"
 	"github.com/text3cn/goodle/providers/config"
-	"github.com/text3cn/goodle/providers/redis"
+	"github.com/text3cn/goodle/providers/i18n"
 	"net/http"
 	"sync"
 	"time"
@@ -39,7 +39,7 @@ type Context struct {
 	Resp   RespStruct
 	Config config.Service
 	Cache  cache.Service
-	Redis  redis.Service
+	I18n   func(string) string
 }
 
 func NewContext(r *http.Request, w http.ResponseWriter, holder core.Container) *Context {
@@ -55,7 +55,7 @@ func NewContext(r *http.Request, w http.ResponseWriter, holder core.Container) *
 		Resp:   RespStruct{request: req, responseWriter: w},
 		Config: holder.NewSingle(core.Config).(config.Service),
 		Cache:  holder.NewSingle(cache.Name).(cache.Service),
-		Redis:  holder.NewSingle(redis.Name).(redis.Service),
+		I18n:   holder.NewSingle(i18n.Name).(i18n.Service).I18n(),
 	}
 	return ctx
 }

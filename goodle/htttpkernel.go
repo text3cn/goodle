@@ -27,81 +27,9 @@ func (*Goodle) RunHttp(router HttpEngine, addr ...string) {
 	}
 	// 全局容器为框架必要服务，http 容器为用户可选开启 bind 哪些服务
 	// 目前服务不多，暂不支持用户自定义服务，所以使用全局服务中心
-	c := core.GlobalCore()
+	c := core.FrameContainer()
 
 	startHttpServer(c, ADDR, router)
-
-	// 容器化运行不需要命令行，将命令行迁移到 good 工具中，通过 good 启动
-	//var cobraRoot = &cobra.Command{
-	//	// 定义根命令的关键字
-	//	Use: "./main",
-	//	// 简短介绍
-	//	Short: "Goodle Framework",
-	//	// 根命令的执行函数
-	//	RunE: func(cmd *cobra.Command, args []string) error {
-	//		cmd.InitDefaultHelpFlag()
-	//		return cmd.Help()
-	//	},
-	//	// 不需要出现 cobra 默认的 completion 子命令
-	//	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
-	//}
-	//var cmd = &Command{
-	//	container: c,
-	//	rootCmd:   cobraRoot,
-	//	config:    config.Instance(),
-	//}
-	//// 绑定框架内置的命令
-	//AddKernelCommands(c, cmd, ADDR, router)
-
-	// 绑定业务的命令
-	// AddAppCommand(rootCmd)
-
-	//isDaemon := cmd.config.IsDaemon()
-	//if !isDaemon {
-	//	// 直接前台挂起运行
-	//	startHttpServer(c, ADDR, router)
-	//} else {
-	//	// 命令行运行，执行 RootCommand
-	//	cmd.rootCmd.Execute()
-	//}
-}
-
-// 挂载框架内置命令
-func AddKernelCommands(c *core.ServicesContainer, command *Command, addr string, router HttpEngine) {
-	rootCmd := command.rootCmd
-	// 后台运行 http 服务
-	httpServer := cobra.Command{
-		Use:     "start",
-		Short:   "Run as a daemon",
-		Example: "./main start",
-		Run: func(cmd *cobra.Command, args []string) {
-			// cmd.Help()
-			// 启动子进程
-			fork(c, command, addr, router)
-			// 绘制主进程控制面板
-			drawControl()
-		},
-	}
-	// 子命令，前台运行 http 服务
-	httpServer.AddCommand(&cobra.Command{
-		Use:     "foreground",
-		Short:   "Run in foreground",
-		Aliases: []string{"f"},
-		Example: "./main start f",
-		Run: func(cmd *cobra.Command, args []string) {
-			startHttpServer(c, addr, router)
-		},
-	})
-	rootCmd.AddCommand(&httpServer)
-	// 停止后台 http 服务
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "stop",
-		Short: "Stop the daemon",
-		Run: func(cmd *cobra.Command, args []string) {
-			stop(command)
-		},
-	})
-
 }
 
 // 启动 http 服务，初始化注册所有内置服务
@@ -135,7 +63,7 @@ func httpServerOutput(cfgsvc config.Service, addr string) {
 	swagCfg := cfgsvc.GetSwagger()
 	if swagCfg != (types.SwaggerConfig{}) {
 		str := "SwaggerUI: http://" + swagCfg.SwaggerUiHost + ":" + cast.ToString(swagCfg.SwaggerUiPort) +
-			"/swagger-ui/index.html"
+			"/swagger-ui/index.html\n"
 		info = fmt.Sprintf("\033[36m%s"+"\033[0m", str)
 		fmt.Println(info)
 	}

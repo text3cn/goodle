@@ -14,9 +14,9 @@ var isDebug = false
 
 // 在 GetDB 时进行服务初始化，连接数据库
 // 使用 map 保存多个数据，dsn 作为 key 确保单例
-func GetDB(c core.Container, connName ...string) *gorm.DB {
+func GetDB(connName ...string) *gorm.DB {
 	if instance == nil {
-		ormService := c.NewSingle(Name).(Service)
+		ormService := core.FrameContainer().NewSingle(Name).(Service)
 		ormService.Init()
 	}
 	var key string

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
 	"strings"
 )
@@ -56,8 +55,5 @@ func mergerLevel2(source *viper.Viper) (ret map[string]map[string]interface{}) {
 
 func (self *ConfigService) getAppConfig() (*viper.Viper, error) {
 	cfg, err := self.LoadConfig("app.yaml")
-	if err != nil {
-		fmt.Println(err)
-	}
 	return cfg, err
 }

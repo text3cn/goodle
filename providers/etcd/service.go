@@ -81,8 +81,10 @@ func (self *etcdService) ServiceDiscovery(serviceName string, callback func(serv
 		for _, v := range services.List {
 			_token += v
 		}
+
+		// 没有节点变更就不用让 Etcd 客户端感知了
 		if token == "none" || _token != token {
-			fmt.Println("发现服务 "+serviceName+" 地址列表为 ", services)
+			goodlog.Trace("发现服务 "+serviceName+" 地址列表为 ", services)
 			callback(services.List)
 			if len(services.List) == 0 {
 				goodlog.Pink("none services " + serviceName)

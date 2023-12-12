@@ -7,10 +7,13 @@ import (
 	"errors"
 	"github.com/spf13/cast"
 	"github.com/text3cn/goodle/kit/castkit"
+	"github.com/text3cn/goodle/providers/goodlog"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/url"
+	"reflect"
+	"strconv"
 )
 
 // 为请求封装方法，在 Context 上实现接口
@@ -298,30 +301,55 @@ func (req *ReqStruct) Form(key string) interface{} {
 	return nil
 }
 
-// 将body文本解析到obj结构体中
+// 将body文本解析到 obj 结构体中
 // params := &paramsStruct{}
 // ctx.Req.BindJson(params)
 func (req *ReqStruct) JsonScan(s any) error {
+	// GET
+	if req.request.Method == "GET" {
+		queryParams := req.request.URL.Query()
+		v := reflect.ValueOf(s).Elem()
+		t := v.Type()
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			fieldType := t.Field(i)
+			// 获取查询参数值
+			paramName := fieldType.Name // 使用字段名称
+			paramValue := queryParams.Get(paramName)
+			// 设置结构体字段值
+			setFieldValue(&field, paramValue)
+		}
+		return nil
+	}
+	// POST、DELETE
 	if req.request != nil {
 		// 读取文本
-		body, err := ioutil.ReadAll(req.request.Body)
+		body, err := io.ReadAll(req.request.Body)
 		if err != nil {
 			return err
 		}
-
 		// 重新填充request.Body，为后续的逻辑二次读取做准备
-		req.request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-
+		req.request.Body = io.NopCloser(bytes.NewBuffer(body))
 		// 解析到obj结构体中
-		err = json.Unmarshal([]byte(body), s)
-
+		err = json.Unmarshal(body, s)
 		if err != nil {
+			goodlog.Error(err.Error())
 			return err
 		}
 	} else {
 		return errors.New("req.request empty")
 	}
 	return nil
+}
+func setFieldValue(field *reflect.Value, paramValue string) {
+	switch field.Kind() {
+	case reflect.String:
+		field.SetString(paramValue)
+	case reflect.Int:
+		if intValue, err := strconv.Atoi(paramValue); err == nil {
+			field.SetInt(int64(intValue))
+		}
+	}
 }
 
 // xml body
