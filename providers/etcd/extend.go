@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"context"
-	"fmt"
 	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/goodlog"
 	"github.com/text3cn/goodle/types"
@@ -25,8 +24,9 @@ func client() (*clientv3.Client, types.EtcdConfig) {
 }
 
 // 启动心跳机制
-func sendHeartbeats(ctx context.Context, cli *clientv3.Client, id clientv3.LeaseID, interval byte) {
+func sendHeartbeats(self *etcdService, cli *clientv3.Client, id clientv3.LeaseID, interval byte) {
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
+	defer self.ServiceRegister() // 重新注册
 	defer ticker.Stop()
 	defer cli.Close()
 
@@ -36,12 +36,10 @@ func sendHeartbeats(ctx context.Context, cli *clientv3.Client, id clientv3.Lease
 			// 定时发送心跳
 			_, err := cli.KeepAliveOnce(context.TODO(), id)
 			if err != nil {
-				log.Printf("Send heartbeats error：%v\n", err)
+				log.Printf("[Etcd 续约失败] Send heartbeats error：%v\n", err)
+				return
 			}
-		case <-ctx.Done():
-			// 程序退出时停止心跳
-			fmt.Println("心跳停止")
-			return
+			time.Sleep(time.Second * 6)
 		}
 	}
 }

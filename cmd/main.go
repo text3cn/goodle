@@ -1,20 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"github.com/text3cn/goodle/kit/gokit"
-	"time"
+	"github.com/text3cn/goodle/goodle"
+	"github.com/text3cn/goodle/providers/etcd"
 )
 
 func main() {
-	var restrictor = gokit.NewTokenBucket(time.Millisecond*10, 100)
-	time.Sleep(time.Second * 1) // 填充令牌是异步的，睡眠一会便能获取到令牌
-	token := restrictor.TakeToken()
-	if token {
-		fmt.Println("获得令牌")
-	} else {
-		fmt.Println("没有令牌，请稍后再试")
-	}
+	goodle.Init()
+	etcd.Instance().ServiceRegister()
+	select {}
 }
 
 //

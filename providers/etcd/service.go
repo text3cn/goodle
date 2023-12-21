@@ -29,10 +29,11 @@ func (self *etcdService) ServiceRegister() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.Server.DialTimeoutSecods)*time.Second)
 	defer cancel()
 
-	// 分配租约时间为 10 秒
-	leaseResp, err := cli.Grant(ctx, 10)
+	// 分配租约时间为 30 秒
+	leaseResp, err := cli.Grant(ctx, 30)
 	if err != nil {
 		goodlog.Pink(leaseResp.Error)
+		return
 	}
 
 	serviceName := cfg.Client.ServiceName
@@ -43,10 +44,11 @@ func (self *etcdService) ServiceRegister() {
 	_, err = cli.Put(ctx, key, serviceAddr, clientv3.WithLease(leaseResp.ID))
 	if err != nil {
 		goodlog.Error(err)
+		return
 	}
 
-	// 启动心跳每 5 秒续约一次
-	go sendHeartbeats(context.TODO(), cli, leaseResp.ID, 5)
+	// 启动心跳每 20 秒续约一次
+	go sendHeartbeats(self, cli, leaseResp.ID, 20)
 
 	goodlog.Trace("注册服务 " + serviceName + " 到 etcd 成功")
 }
