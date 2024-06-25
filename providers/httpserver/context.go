@@ -50,12 +50,10 @@ func NewContext(r *http.Request, w http.ResponseWriter, holder core.Container) *
 		middwaresIndex: -1,
 		container:      holder,
 		values:         map[string]interface{}{},
-
-		Req:    req,
-		Resp:   RespStruct{request: req, responseWriter: w},
-		Config: holder.NewSingle(core.Config).(config.Service),
-		Cache:  holder.NewSingle(cache.Name).(cache.Service),
-		I18n:   holder.NewSingle(i18n.Name).(i18n.Service).I18n(),
+		Req:            req,
+		Resp:           RespStruct{request: req, responseWriter: w},
+		Config:         holder.NewSingle(config.Name).(config.Service),
+		I18n:           holder.NewSingle(i18n.Name).(i18n.Service).I18n(),
 	}
 	return ctx
 }

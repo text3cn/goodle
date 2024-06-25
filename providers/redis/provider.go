@@ -12,7 +12,7 @@ var instance *RedisService
 
 func Instance() *RedisService {
 	if instance == nil {
-		redisService := core.FrameContainer().NewSingle(Name).(*RedisService)
+		redisService := core.NewContainer().NewSingle(Name).(*RedisService)
 		redisService.init()
 		return redisService
 	}

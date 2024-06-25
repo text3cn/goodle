@@ -24,7 +24,7 @@ type RedisService struct {
 func (self *RedisService) init() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	configService := self.c.NewSingle(core.Config).(config.Service)
+	configService := self.c.NewSingle(config.Name).(config.Service)
 	redisConfigs := configService.GetRedis()
 	var isFirst = true
 	for connName, config := range redisConfigs {

@@ -12,11 +12,19 @@ import (
 
 var isDebug = false
 
+var c *core.ServicesContainer
+
 // 在 GetDB 时进行服务初始化，连接数据库
 // 使用 map 保存多个数据，dsn 作为 key 确保单例
 func GetDB(connName ...string) *gorm.DB {
+	if c == nil {
+		c := core.NewContainer()
+		c.Bind(&orm.OrmProvider{})
+		c.NewSingle(orm.Name) //.(orm.Service).Init()
+	}
+
 	if instance == nil {
-		ormService := core.FrameContainer().NewSingle(Name).(Service)
+		ormService := core.Module.NewSingle(Name).(Service)
 		ormService.Init()
 	}
 	var key string

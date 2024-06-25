@@ -7,12 +7,14 @@ import (
 
 var instance *ConfigService
 
+const Name = "config"
+
 type ConfigProvider struct {
 	core.ServiceProvider
 }
 
 func (self *ConfigProvider) Name() string {
-	return core.Config
+	return Name
 }
 
 func (*ConfigProvider) InitOnBoot() bool {

@@ -37,7 +37,7 @@ type ServicesContainer struct {
 }
 
 // 创建一个服务容器
-func New() *ServicesContainer {
+func NewContainer() *ServicesContainer {
 	container := &ServicesContainer{
 		providers: map[string]ServiceProvider{},
 		instances: map[string]interface{}{},
@@ -64,7 +64,7 @@ func (self *ServicesContainer) Bind(provider ServiceProvider) error {
 		method := provider.RegisterProviderInstance(self)
 		instance, err := method(params...)
 		if err != nil {
-			return errors.New(err.Error())
+			panic(errors.New(err.Error()))
 		}
 		self.instances[name] = instance
 		err = provider.AfterInit(instance)
@@ -103,7 +103,7 @@ func (self *ServicesContainer) make(name string, params []interface{}, forceNew 
 	defer self.lock.RUnlock()
 	sp := self.findServiceProvider(name)
 	if sp == nil {
-		return nil, errors.New("provider structure " + name + " have not register")
+		return nil, errors.New("provider structure " + name + " have not bind")
 	}
 	// 强制实例化，也就是不走单例
 	if forceNew {

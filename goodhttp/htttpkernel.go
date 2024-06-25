@@ -1,42 +1,39 @@
-package goodle
+package goodhttp
 
 import (
 	"fmt"
 	"github.com/spf13/cast"
-	"github.com/spf13/cobra" // https://github.com/spf13/cobra
 	"github.com/text3cn/goodle/core"
 	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/goodlog"
 	"github.com/text3cn/goodle/providers/httpserver"
+	"github.com/text3cn/goodle/providers/i18n"
 	"github.com/text3cn/goodle/types"
 	"net/http"
 )
 
 type HttpEngine func(engine *httpserver.Engine)
 
-type Command struct {
-	container core.Container
-	rootCmd   *cobra.Command
-	config    config.Service
-}
-
-func (*Goodle) RunHttp(router HttpEngine, addr ...string) {
+func Run(router HttpEngine, addr ...string) {
 	ADDR := ""
 	if len(addr) > 0 {
 		ADDR = addr[0]
 	}
-	// 全局容器为框架必要服务，http 容器为用户可选开启 bind 哪些服务
-	// 目前服务不多，暂不支持用户自定义服务，所以使用全局服务中心
-	c := core.FrameContainer()
-
+	// 服务容器
+	c := core.NewContainer()
+	c.Bind(&config.ConfigProvider{})
+	c.Bind(&goodlog.GoodlogProvider{})
+	c.Bind(&i18n.I18nProvider{})
+	c.Bind(&httpserver.HttpServerProvider{})
 	startHttpServer(c, ADDR, router)
 }
 
-// 启动 http 服务，初始化注册所有内置服务
+// 启动 http 服务
 func startHttpServer(c *core.ServicesContainer, addr string, router HttpEngine) {
+	cfgsvc := c.NewSingle(config.Name).(config.Service)
 	engine := c.NewSingle(httpserver.Name).(*httpserver.HttpServerService).Engine.NewHttpEngine(c)
 	router(engine) // 把路由保存到 map
-	cfgsvc := c.NewSingle(core.Config).(config.Service)
+
 	// 代码中没有传递端口则去配置文件找
 	if addr == "" {
 		addr = cfgsvc.GetHttpAddr()

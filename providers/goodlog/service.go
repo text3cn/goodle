@@ -10,7 +10,7 @@ var goodlogSvc *GoodlogService
 
 func instance() {
 	if goodlogSvc == nil {
-		contain := core.FrameContainer()
+		contain := core.NewContainer()
 		logLevel := getLogLevel(contain)
 		goodlogSvc = &GoodlogService{c: contain, level: logLevel}
 	}

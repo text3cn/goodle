@@ -2,7 +2,6 @@
 package goodlog
 
 import (
-	"fmt"
 	"github.com/text3cn/goodle/core"
 	"github.com/text3cn/goodle/providers/config"
 	"strings"
@@ -26,7 +25,6 @@ func (*GoodlogProvider) InitOnBoot() bool {
 
 // 往服务中心注册自己前的操作
 func (self *GoodlogProvider) BeforeInit(c core.Container) error {
-	fmt.Println("Goodlog BeforeInit")
 	self.level = getLogLevel(c)
 	return nil
 }
@@ -53,7 +51,7 @@ func (*GoodlogProvider) AfterInit(instance any) error {
 }
 
 func getLogLevel(contain core.Container) byte {
-	configSvs := contain.NewSingle(core.Config).(config.Service)
+	configSvs := contain.NewSingle(config.Name).(config.Service)
 	config := configSvs.GetGoodLog()
 	switch strings.ToLower(config.Level) {
 	case "trace":

@@ -23,9 +23,10 @@ type OrmService struct {
 
 }
 
-// 如果能获取到配置文件则进行数据库连接，这个目前在 engine/run.go -> initServices() 中直接实例化了
+// 如果能获取到配置文件则进行数据库连接
 func (self *OrmService) Init() {
-	configService := self.c.NewSingle(core.Config).(config.Service)
+	core.Module.Bind(&config.ConfigProvider{})
+	configService := core.Module.NewSingle(config.Name).(config.Service)
 	dbsCfg := configService.GetDatabase()
 	if dbsCfg == nil {
 		goodlog.Error("database config error")
