@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
@@ -76,13 +77,14 @@ func (self *ConfigService) LoadConfig(filename string) (*viper.Viper, error) {
 	// 没有配置文件
 	if config == nil && localConfig == nil {
 		err := errors.New("Unable to find configuration file " + filename +
-			".\nThe configuration file should be placed in any of the following paths:\n " +
+			" The configuration file should be placed in any of the following paths:\n" +
 			self.currentPath + filename + "\n" +
 			self.currentPath + "config/" + filename + "\n" +
 			self.currentPath + "config/local/" + filename + "\n",
 		)
 		return nil, err
 	}
+
 	// 如有本地配置文件，则用本地配置项覆盖
 	mergerConfig = config
 	if localConfig != nil {
@@ -150,7 +152,11 @@ func (self *ConfigService) GetRuntimePath() string {
 
 func (self *ConfigService) GetDatabase() (dbsCfg map[string]types.DBConfig) {
 	dbsCfg = make(map[string]types.DBConfig)
-	cfg, _ := self.LoadConfig("database.yaml")
+	cfg, err := self.LoadConfig("database.yaml")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	cfgNodes := mergerLevel2(cfg)
 	for k, v := range cfgNodes {
 		item := types.DBConfig{}

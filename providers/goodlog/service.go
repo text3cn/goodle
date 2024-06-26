@@ -8,12 +8,10 @@ import (
 
 var goodlogSvc *GoodlogService
 
-func instance() {
-	if goodlogSvc == nil {
-		contain := core.NewContainer()
-		logLevel := getLogLevel(contain)
-		goodlogSvc = &GoodlogService{c: contain, level: logLevel}
-	}
+type GoodlogService struct {
+	Service
+	c     core.Container
+	level byte
 }
 
 // 日志级别，只记录大于配置级别的日志
@@ -42,15 +40,9 @@ type Service interface {
 	Fatalf(output ...interface{})
 
 	Color(color string, output interface{})
-	Colorf(color string, format string, output ...interface{})
+	Colorf(color string, output ...interface{})
 
-	P(output interface{})
-}
-
-type GoodlogService struct {
-	Service
-	c     core.Container
-	level byte
+	//P(output interface{})
 }
 
 // trace

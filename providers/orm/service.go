@@ -2,12 +2,15 @@ package orm
 
 import (
 	"database/sql"
+	"github.com/spf13/cast"
 	"github.com/text3cn/goodle/core"
-	"github.com/text3cn/goodle/providers/config"
 	"github.com/text3cn/goodle/providers/goodlog"
+	"github.com/text3cn/goodle/types"
+	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"strconv"
 	"time"
 )
 
@@ -25,8 +28,6 @@ type OrmService struct {
 
 // 如果能获取到配置文件则进行数据库连接
 func (self *OrmService) Init() {
-	core.Module.Bind(&config.ConfigProvider{})
-	configService := core.Module.NewSingle(config.Name).(config.Service)
 	dbsCfg := configService.GetDatabase()
 	if dbsCfg == nil {
 		goodlog.Error("database config error")
@@ -46,17 +47,22 @@ func (self *OrmService) Init() {
 		case "sqlite":
 			db, err = gorm.Open(sqlite.Open(config.Database), &gorm.Config{})
 		}
-		// 设置对应的连接池配置
+		// 设置对应的连接池配置，确保 instance 中随时可以拿到未断开的连接
 		sqlDB, err = db.DB()
 		if err != nil {
 			break
 		}
+		connMaxIdle := 10
+		maxOpenConns := 100
 		if config.ConnMaxIdle > 0 {
-			sqlDB.SetMaxIdleConns(config.ConnMaxIdle)
+			connMaxIdle = config.ConnMaxIdle
 		}
 		if config.ConnMaxOpen > 0 {
-			sqlDB.SetMaxOpenConns(config.ConnMaxOpen)
+			maxOpenConns = config.ConnMaxOpen
 		}
+		sqlDB.SetMaxIdleConns(connMaxIdle)
+		sqlDB.SetMaxOpenConns(maxOpenConns)
+
 		if config.ConnMaxLifetime != "" {
 			liftTime, err := time.ParseDuration(config.ConnMaxLifetime)
 			if err != nil {
@@ -79,4 +85,27 @@ func (self *OrmService) Init() {
 		}
 		self.dbs[k] = db
 	}
+}
+
+func mysqlOpen(config types.DBConfig) gorm.Dialector {
+	isDebug = config.Debug
+	return mysql.New(mysql.Config{
+		DSN:                       formatDsn(config),
+		DefaultStringSize:         256,   // string 类型字段的默认长度
+		DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
+		DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
+		DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
+		SkipInitializeWithVersion: false, // 根据当前 MySQL 版本自动配置
+	})
+}
+
+// 生成 dsn
+// https://gorm.io/zh_CN/docs/connecting_to_the_database.html
+func formatDsn(conf types.DBConfig) (dsn string) {
+	// dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn += conf.Username + ":" + conf.Password
+	dsn += "@" + conf.Protocol + "(" + conf.Host + ":" + strconv.Itoa(conf.Port) + ")"
+	dsn += "/" + conf.Database
+	dsn += "?charset=" + conf.Charset + "&parseTime=" + cast.ToString(conf.ParseTime) + "&loc=" + conf.Loc
+	return
 }

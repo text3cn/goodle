@@ -9,6 +9,14 @@ import (
 
 const Name = "goodlog"
 
+func instance() {
+	if goodlogSvc == nil {
+		contain := core.NewContainer()
+		logLevel := getLogLevel(contain)
+		goodlogSvc = &GoodlogService{c: contain, level: logLevel}
+	}
+}
+
 type GoodlogProvider struct {
 	core.ServiceProvider // 显示的写上实现了哪个接口主要是为了代码可读性以及 IDE 友好
 	level                byte
@@ -36,10 +44,10 @@ func (sp *GoodlogProvider) Params(c core.Container) []interface{} {
 func (self *GoodlogProvider) RegisterProviderInstance(c core.Container) core.NewInstanceFunc {
 	return func(params ...interface{}) (interface{}, error) {
 		// 这里需要将参数展开，将配置注入到日志类，例如日志开关等
-		c := params[0].(core.Container)
-		if goodlogSvc != nil {
-			return goodlogSvc, nil
-		}
+		//c := params[0].(core.Container)
+		//if goodlogSvc != nil {
+		//	return goodlogSvc, nil
+		//}
 		goodlogSvc = &GoodlogService{c: c, level: self.level}
 		return goodlogSvc, nil
 	}
